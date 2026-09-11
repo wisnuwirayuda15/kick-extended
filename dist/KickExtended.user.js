@@ -409,6 +409,53 @@
 		activePlayerUi: null,
 		autoSwitchTimer: null
 	};
+	function isVodPage() {
+		const pathParts = window.location.pathname.split("/").filter(Boolean);
+		return pathParts.length >= 3 && (pathParts[1] === "videos" || pathParts[1] === "video");
+	}
+	function getNativeVideo() {
+		const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
+		if (byId && byId.id !== "k-video") return byId;
+		return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
+	}
+	function isNativePlayerReady() {
+		const nativeVideo = getNativeVideo();
+		if (!nativeVideo) return false;
+		const rect = nativeVideo.getBoundingClientRect();
+		if (rect.width < 120 || rect.height < 70) return false;
+		return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
+	}
+	function findCopyButtonAnchor() {
+		const badge = document.querySelector(BADGE_SELECTOR);
+		if (badge?.parentElement) return badge;
+		return document.querySelector(CHANNEL_NAME_SELECTOR);
+	}
+	function findNativePlayerContainer() {
+		const nativeVideo = getNativeVideo();
+		if (!nativeVideo) return null;
+		const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
+		if (classMatch) return classMatch;
+		const videoRect = nativeVideo.getBoundingClientRect();
+		let node = nativeVideo.parentElement;
+		let bestMatch = nativeVideo.parentElement;
+		while (node && node !== document.body) {
+			const rect = node.getBoundingClientRect();
+			if (rect.width > videoRect.width * 1.15 || rect.height > videoRect.height * 1.3) break;
+			bestMatch = node;
+			node = node.parentElement;
+		}
+		return bestMatch;
+	}
+	function stopNativePlayback(scope) {
+		(scope || document).querySelectorAll("video").forEach((videoElement) => {
+			if (videoElement.id === "k-video") return;
+			try {
+				videoElement.pause();
+				videoElement.removeAttribute("src");
+				videoElement.load();
+			} catch (e) {}
+		});
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -482,20 +529,6 @@
 				playerUi.showControls?.();
 			}, true);
 			globalPlayerListenersBound = true;
-		}
-		function isVodPage() {
-			const pathParts = window.location.pathname.split("/").filter(Boolean);
-			return pathParts.length >= 3 && (pathParts[1] === "videos" || pathParts[1] === "video");
-		}
-		function stopNativePlayback(scope) {
-			(scope || document).querySelectorAll("video").forEach((videoElement) => {
-				if (videoElement.id === "k-video") return;
-				try {
-					videoElement.pause();
-					videoElement.removeAttribute("src");
-					videoElement.load();
-				} catch (e) {}
-			});
 		}
 		function makeVideoTitle(result) {
 			return (result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
@@ -641,23 +674,6 @@
 		window.addEventListener("popstate", handleLocationChange);
 		window.addEventListener("hashchange", handleLocationChange);
 		window.addEventListener("pagehide", destroyCustomPlayer);
-		function getNativeVideo() {
-			const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
-			if (byId && byId.id !== "k-video") return byId;
-			return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
-		}
-		function isNativePlayerReady() {
-			const nativeVideo = getNativeVideo();
-			if (!nativeVideo) return false;
-			const rect = nativeVideo.getBoundingClientRect();
-			if (rect.width < 120 || rect.height < 70) return false;
-			return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
-		}
-		function findCopyButtonAnchor() {
-			const badge = document.querySelector(BADGE_SELECTOR);
-			if (badge?.parentElement) return badge;
-			return document.querySelector(CHANNEL_NAME_SELECTOR);
-		}
 		function ensureCopyUrlButton() {
 			if (!isVodPage()) return;
 			if (document.querySelector("#k-copy-url-btn")) return;
@@ -702,22 +718,6 @@
 				setTimeout(() => setLabel(defaultLabel, null), 1600);
 			});
 			anchor.parentElement.insertBefore(button, anchor.nextSibling);
-		}
-		function findNativePlayerContainer() {
-			const nativeVideo = getNativeVideo();
-			if (!nativeVideo) return null;
-			const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
-			if (classMatch) return classMatch;
-			const videoRect = nativeVideo.getBoundingClientRect();
-			let node = nativeVideo.parentElement;
-			let bestMatch = nativeVideo.parentElement;
-			while (node && node !== document.body) {
-				const rect = node.getBoundingClientRect();
-				if (rect.width > videoRect.width * 1.15 || rect.height > videoRect.height * 1.3) break;
-				bestMatch = node;
-				node = node.parentElement;
-			}
-			return bestMatch;
 		}
 		function ensureCustomPlayerToggle() {
 			if (!isVodPage() || state.isUnlocking) return;

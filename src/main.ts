@@ -37,6 +37,14 @@ import {
 } from "./lib/kick-api.ts";
 import { ChatController } from "./chat/chat-controller.ts";
 import { state } from "./state.ts";
+import {
+  findCopyButtonAnchor,
+  findNativePlayerContainer,
+  getNativeVideo,
+  isNativePlayerReady,
+  isVodPage,
+} from "./native/detect.ts";
+import { stopNativePlayback } from "./native/teardown.ts";
 
 (function () {
   "use strict";
@@ -151,27 +159,6 @@ import { state } from "./state.ts";
     );
 
     globalPlayerListenersBound = true;
-  }
-
-  function isVodPage() {
-    const pathParts = window.location.pathname.split("/").filter(Boolean);
-    return (
-      pathParts.length >= 3 &&
-      (pathParts[1] === "videos" || pathParts[1] === "video")
-    );
-  }
-
-  function stopNativePlayback(scope) {
-    (scope || document).querySelectorAll("video").forEach((videoElement) => {
-      if (videoElement.id === "k-video") return;
-      try {
-        videoElement.pause();
-        videoElement.removeAttribute("src");
-        videoElement.load();
-      } catch (e) {
-        /* the element may already be detached */
-      }
-    });
   }
 
 
@@ -357,31 +344,6 @@ import { state } from "./state.ts";
   window.addEventListener("hashchange", handleLocationChange);
   window.addEventListener("pagehide", destroyCustomPlayer);
 
-  function getNativeVideo() {
-    const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
-    if (byId && byId.id !== "k-video") return byId;
-    return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
-  }
-
-  // Kick renders the <video> tag well before the player is actually usable,
-  // so element presence alone is a bad signal. The control bar is no help
-  // either: it is only mounted on hover. Size plus readyState is.
-  function isNativePlayerReady() {
-    const nativeVideo: any = getNativeVideo();
-    if (!nativeVideo) return false;
-
-    const rect = nativeVideo.getBoundingClientRect();
-    if (rect.width < 120 || rect.height < 70) return false;
-
-    return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
-  }
-
-  function findCopyButtonAnchor() {
-    const badge = document.querySelector(BADGE_SELECTOR);
-    if (badge?.parentElement) return badge;
-    return document.querySelector(CHANNEL_NAME_SELECTOR);
-  }
-
   function ensureCopyUrlButton() {
     // Needs a video slug to resolve a stream, so channel pages are out.
     if (!isVodPage()) return;
@@ -434,36 +396,6 @@ import { state } from "./state.ts";
     });
 
     anchor.parentElement.insertBefore(button, anchor.nextSibling);
-  }
-
-  function findNativePlayerContainer() {
-    const nativeVideo = getNativeVideo();
-    if (!nativeVideo) return null;
-
-    // Kick's Tailwind classes churn between deploys, so this may miss.
-    const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
-    if (classMatch) return classMatch;
-
-    // Fallback: climb while each ancestor still hugs the video box. The
-    // control overlay is absolutely positioned inside that same box, so the
-    // last tight-fitting ancestor is the player root. The first one that
-    // grows noticeably is page chrome and must not be wiped.
-    const videoRect = nativeVideo.getBoundingClientRect();
-    let node = nativeVideo.parentElement;
-    let bestMatch = nativeVideo.parentElement;
-
-    while (node && node !== document.body) {
-      const rect = node.getBoundingClientRect();
-      if (
-        rect.width > videoRect.width * 1.15 ||
-        rect.height > videoRect.height * 1.3
-      )
-        break;
-      bestMatch = node;
-      node = node.parentElement;
-    }
-
-    return bestMatch;
   }
 
   function ensureCustomPlayerToggle() {
