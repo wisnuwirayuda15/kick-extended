@@ -196,6 +196,30 @@
 		document.body.appendChild(toast);
 		setTimeout(() => toast.remove(), duration);
 	}
+	var latestReleasePromise = null;
+	async function getLatestReleaseAsync() {
+		try {
+			const response = await gmFetch("https://api.github.com/repos/Enmn/KickNoSub/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
+			if (!response.ok) return null;
+			const data = response.json();
+			return {
+				tagName: data.tag_name,
+				htmlUrl: data.html_url,
+				name: data.name
+			};
+		} catch (e) {
+			return null;
+		}
+	}
+	function getLatestReleaseInfo() {
+		if (latestReleasePromise) return latestReleasePromise;
+		latestReleasePromise = getLatestReleaseAsync().then((release) => {
+			const currentVersion = GM_info.script.version;
+			if (release?.tagName && release?.htmlUrl && isVersionGreater(release.tagName, currentVersion)) return release;
+			return null;
+		}).catch(() => null);
+		return latestReleasePromise;
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -204,32 +228,8 @@
 		let activeChatController = null;
 		let nativeExternalCache = null;
 		let isUnlocking = false;
-		let latestReleasePromise = null;
 		let activePlayerUi = null;
 		let globalPlayerListenersBound = false;
-		async function getLatestReleaseAsync() {
-			try {
-				const response = await gmFetch("https://api.github.com/repos/Enmn/KickNoSub/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
-				if (!response.ok) return null;
-				const data = response.json();
-				return {
-					tagName: data.tag_name,
-					htmlUrl: data.html_url,
-					name: data.name
-				};
-			} catch (e) {
-				return null;
-			}
-		}
-		function getLatestReleaseInfo() {
-			if (latestReleasePromise) return latestReleasePromise;
-			latestReleasePromise = getLatestReleaseAsync().then((release) => {
-				const currentVersion = GM_info.script.version;
-				if (release?.tagName && release?.htmlUrl && isVersionGreater(release.tagName, currentVersion)) return release;
-				return null;
-			}).catch(() => null);
-			return latestReleasePromise;
-		}
 		function bindGlobalPlayerListeners() {
 			if (globalPlayerListenersBound) return;
 			document.addEventListener("click", (event) => {

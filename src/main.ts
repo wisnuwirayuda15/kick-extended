@@ -29,6 +29,7 @@ import {
 } from "./lib/storage.ts";
 import { formatTime, getVolumeIcon } from "./lib/format.ts";
 import { showToast } from "./lib/toast.ts";
+import { getLatestReleaseInfo } from "./lib/update-check.ts";
 
 (function () {
   "use strict";
@@ -41,50 +42,9 @@ import { showToast } from "./lib/toast.ts";
   let activeChatController = null;
   let nativeExternalCache = null;
   let isUnlocking = false;
-  let latestReleasePromise = null;
   let activePlayerUi = null;
   let globalPlayerListenersBound = false;
 
-
-  async function getLatestReleaseAsync() {
-    try {
-      const response = await gmFetch(
-        "https://api.github.com/repos/Enmn/KickNoSub/releases/latest",
-        {
-          headers: { Accept: "application/vnd.github+json" },
-        },
-      );
-      if (!response.ok) return null;
-      const data = response.json();
-      return {
-        tagName: data.tag_name,
-        htmlUrl: data.html_url,
-        name: data.name,
-      };
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function getLatestReleaseInfo() {
-    if (latestReleasePromise) return latestReleasePromise;
-
-    latestReleasePromise = getLatestReleaseAsync()
-      .then((release) => {
-        const currentVersion = GM_info.script.version;
-        if (
-          release?.tagName &&
-          release?.htmlUrl &&
-          isVersionGreater(release.tagName, currentVersion)
-        ) {
-          return release;
-        }
-        return null;
-      })
-      .catch(() => null);
-
-    return latestReleasePromise;
-  }
 
   function bindGlobalPlayerListeners() {
     if (globalPlayerListenersBound) return;
