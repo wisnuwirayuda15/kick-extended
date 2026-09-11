@@ -2,7 +2,6 @@ import Hls from "hls.js";
 import css from "./styles.css?raw";
 import { ICONS } from "./icons.ts";
 import {
-  AUTO_CUSTOM_KEY,
   AUTO_SWITCH_SETTLE_MS,
   BADGE_SELECTOR,
   CHANNEL_NAME_SELECTOR,
@@ -15,6 +14,19 @@ import {
   SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR,
 } from "./constants.ts";
 import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
+import {
+  clearPreferCustom,
+  clearResumeTime,
+  getPlayerSettingsKey,
+  getPreferCustom,
+  getResumeKey,
+  isVersionGreater,
+  loadPlayerSettings,
+  readResumeTime,
+  saveResumeTime,
+  savePlayerSettings,
+  setPreferCustom,
+} from "./lib/storage.ts";
 
 (function () {
   "use strict";
@@ -31,58 +43,6 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
   let activePlayerUi = null;
   let globalPlayerListenersBound = false;
 
-
-  function getResumeKey(channelSlug, videoSlug) {
-    return `kick_unlocker_resume:${channelSlug}:${videoSlug}`;
-  }
-
-  function getPlayerSettingsKey(channelSlug, videoSlug) {
-    return `kick_unlocker_settings:${channelSlug}:${videoSlug}`;
-  }
-
-  function loadPlayerSettings(settingsKey) {
-    try {
-      const raw = localStorage.getItem(settingsKey);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function savePlayerSettings(settingsKey, partialSettings) {
-    const currentSettings = loadPlayerSettings(settingsKey);
-    localStorage.setItem(
-      settingsKey,
-      JSON.stringify({
-        ...currentSettings,
-        ...partialSettings,
-      }),
-    );
-  }
-
-  function normalizeVersion(version) {
-    return String(version || "")
-      .trim()
-      .replace(/^v/i, "")
-      .split(/[^0-9]+/)
-      .filter(Boolean)
-      .map((part) => parseInt(part, 10));
-  }
-
-  function isVersionGreater(candidateVersion, currentVersion) {
-    const candidateParts = normalizeVersion(candidateVersion);
-    const currentParts = normalizeVersion(currentVersion);
-    const maxLength = Math.max(candidateParts.length, currentParts.length);
-
-    for (let index = 0; index < maxLength; index++) {
-      const candidate = candidateParts[index] || 0;
-      const current = currentParts[index] || 0;
-      if (candidate > current) return true;
-      if (candidate < current) return false;
-    }
-
-    return false;
-  }
 
   async function getLatestReleaseAsync() {
     try {
@@ -847,7 +807,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
     const switchToCustom = () =>
       unlockVideo(null, { explicitContainer: container, manualSwitch: true });
 
-    if (localStorage.getItem(AUTO_CUSTOM_KEY) === "1") {
+    if (getPreferCustom()) {
       if (autoSwitchTimer || !isNativePlayerReady()) return;
       // Let React finish its mount pass before we tear the container down.
       // Re-check afterwards in case the DOM moved during the wait.
@@ -886,7 +846,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
     switchButton.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+      setPreferCustom();
       switchToCustom();
     });
 
@@ -985,7 +945,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
       if (manualSwitch) {
         prefetched = await resolveStream(channelSlug, videoSlug);
         if (!prefetched) {
-          localStorage.removeItem(AUTO_CUSTOM_KEY);
+          clearPreferCustom();
           showToast(
             "KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.",
           );
@@ -1142,7 +1102,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
         btnNative.style.display = "inline-flex";
         btnNative.addEventListener("click", (event) => {
           event.stopPropagation();
-          localStorage.removeItem(AUTO_CUSTOM_KEY);
+          clearPreferCustom();
           // Kick mounts its player during page bootstrap, so a reload is the
           // only reliable way to get it back.
           window.location.reload();
@@ -1469,7 +1429,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
 
       vid.addEventListener("timeupdate", () => {
         if (Date.now() - lastSave > 4000) {
-          localStorage.setItem(resumeKey, vid.currentTime);
+          saveResumeTime(resumeKey, vid.currentTime);
           lastSave = Date.now();
         }
 
@@ -1478,7 +1438,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
         }
       });
       vid.addEventListener("ended", () => {
-        localStorage.removeItem(resumeKey);
+        clearResumeTime(resumeKey);
       });
       // Rendering the bar is split out so a seek can paint the new position
       // immediately instead of waiting for the next `timeupdate`, which does
@@ -1686,7 +1646,7 @@ import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
 
           vid.play().catch(() => btnBig.classList.add("visible"));
         });
-        const savedTime = parseFloat(localStorage.getItem(resumeKey));
+        const savedTime = parseFloat(readResumeTime(resumeKey));
 
         if (Number.isFinite(savedTime) && savedTime > 1) {
           vid.addEventListener(

@@ -69,7 +69,9 @@
 	var PLAYER_CONTAINER_SELECTOR = ".relative.flex.flex-col";
 	var SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR = ".relative.flex.flex-col.items-center.justify-center.overflow-hidden.rounded";
 	var KICK_CHAT_SELECTOR = "#chatroom-messages";
-	var AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
+	var STORAGE_PREFIX = "kick_extended_";
+	var LEGACY_STORAGE_PREFIX = "kick_unlocker_";
+	var AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
 	function gmFetch(url, opts = {}) {
 		return new Promise((resolve, reject) => {
 			GM_xmlhttpRequest({
@@ -100,6 +102,78 @@
 			});
 		});
 	}
+	function legacyKeyFor(key) {
+		return key.startsWith("kick_extended_") ? LEGACY_STORAGE_PREFIX + key.slice(STORAGE_PREFIX.length) : key;
+	}
+	function readMigrated(key) {
+		const current = localStorage.getItem(key);
+		if (current !== null) return current;
+		const legacyKey = legacyKeyFor(key);
+		if (legacyKey === key) return null;
+		const legacyValue = localStorage.getItem(legacyKey);
+		if (legacyValue === null) return null;
+		localStorage.setItem(key, legacyValue);
+		localStorage.removeItem(legacyKey);
+		return legacyValue;
+	}
+	function removeBoth(key) {
+		localStorage.removeItem(key);
+		localStorage.removeItem(legacyKeyFor(key));
+	}
+	function getResumeKey(channelSlug, videoSlug) {
+		return `${STORAGE_PREFIX}resume:${channelSlug}:${videoSlug}`;
+	}
+	function getPlayerSettingsKey(channelSlug, videoSlug) {
+		return `${STORAGE_PREFIX}settings:${channelSlug}:${videoSlug}`;
+	}
+	function loadPlayerSettings(settingsKey) {
+		try {
+			const raw = readMigrated(settingsKey);
+			return raw ? JSON.parse(raw) : {};
+		} catch (e) {
+			return {};
+		}
+	}
+	function savePlayerSettings(settingsKey, partialSettings) {
+		const currentSettings = loadPlayerSettings(settingsKey);
+		localStorage.setItem(settingsKey, JSON.stringify({
+			...currentSettings,
+			...partialSettings
+		}));
+	}
+	function readResumeTime(resumeKey) {
+		return readMigrated(resumeKey);
+	}
+	function saveResumeTime(resumeKey, currentTime) {
+		localStorage.setItem(resumeKey, currentTime);
+	}
+	function clearResumeTime(resumeKey) {
+		removeBoth(resumeKey);
+	}
+	function getPreferCustom() {
+		return readMigrated(AUTO_CUSTOM_KEY) === "1";
+	}
+	function setPreferCustom() {
+		localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+	}
+	function clearPreferCustom() {
+		removeBoth(AUTO_CUSTOM_KEY);
+	}
+	function normalizeVersion(version) {
+		return String(version || "").trim().replace(/^v/i, "").split(/[^0-9]+/).filter(Boolean).map((part) => parseInt(part, 10));
+	}
+	function isVersionGreater(candidateVersion, currentVersion) {
+		const candidateParts = normalizeVersion(candidateVersion);
+		const currentParts = normalizeVersion(currentVersion);
+		const maxLength = Math.max(candidateParts.length, currentParts.length);
+		for (let index = 0; index < maxLength; index++) {
+			const candidate = candidateParts[index] || 0;
+			const current = currentParts[index] || 0;
+			if (candidate > current) return true;
+			if (candidate < current) return false;
+		}
+		return false;
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -111,42 +185,6 @@
 		let latestReleasePromise = null;
 		let activePlayerUi = null;
 		let globalPlayerListenersBound = false;
-		function getResumeKey(channelSlug, videoSlug) {
-			return `kick_unlocker_resume:${channelSlug}:${videoSlug}`;
-		}
-		function getPlayerSettingsKey(channelSlug, videoSlug) {
-			return `kick_unlocker_settings:${channelSlug}:${videoSlug}`;
-		}
-		function loadPlayerSettings(settingsKey) {
-			try {
-				const raw = localStorage.getItem(settingsKey);
-				return raw ? JSON.parse(raw) : {};
-			} catch (e) {
-				return {};
-			}
-		}
-		function savePlayerSettings(settingsKey, partialSettings) {
-			const currentSettings = loadPlayerSettings(settingsKey);
-			localStorage.setItem(settingsKey, JSON.stringify({
-				...currentSettings,
-				...partialSettings
-			}));
-		}
-		function normalizeVersion(version) {
-			return String(version || "").trim().replace(/^v/i, "").split(/[^0-9]+/).filter(Boolean).map((part) => parseInt(part, 10));
-		}
-		function isVersionGreater(candidateVersion, currentVersion) {
-			const candidateParts = normalizeVersion(candidateVersion);
-			const currentParts = normalizeVersion(currentVersion);
-			const maxLength = Math.max(candidateParts.length, currentParts.length);
-			for (let index = 0; index < maxLength; index++) {
-				const candidate = candidateParts[index] || 0;
-				const current = currentParts[index] || 0;
-				if (candidate > current) return true;
-				if (candidate < current) return false;
-			}
-			return false;
-		}
 		async function getLatestReleaseAsync() {
 			try {
 				const response = await gmFetch("https://api.github.com/repos/Enmn/KickNoSub/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
@@ -688,7 +726,7 @@
 				explicitContainer: container,
 				manualSwitch: true
 			});
-			if (localStorage.getItem("kick_unlocker_prefer_custom") === "1") {
+			if (getPreferCustom()) {
 				if (autoSwitchTimer || !isNativePlayerReady()) return;
 				autoSwitchTimer = setTimeout(() => {
 					autoSwitchTimer = null;
@@ -717,7 +755,7 @@
 			switchButton.addEventListener("click", (event) => {
 				event.preventDefault();
 				event.stopPropagation();
-				localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+				setPreferCustom();
 				switchToCustom();
 			});
 			anchorButton.parentElement.insertBefore(switchButton, anchorButton);
@@ -788,7 +826,7 @@
 				if (manualSwitch) {
 					prefetched = await resolveStream(channelSlug, videoSlug);
 					if (!prefetched) {
-						localStorage.removeItem(AUTO_CUSTOM_KEY);
+						clearPreferCustom();
 						showToast("KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.");
 						return;
 					}
@@ -899,7 +937,7 @@
 					btnNative.style.display = "inline-flex";
 					btnNative.addEventListener("click", (event) => {
 						event.stopPropagation();
-						localStorage.removeItem(AUTO_CUSTOM_KEY);
+						clearPreferCustom();
 						window.location.reload();
 					});
 				}
@@ -1137,13 +1175,13 @@
 				let lastSave = 0;
 				vid.addEventListener("timeupdate", () => {
 					if (Date.now() - lastSave > 4e3) {
-						localStorage.setItem(resumeKey, vid.currentTime);
+						saveResumeTime(resumeKey, vid.currentTime);
 						lastSave = Date.now();
 					}
 					if (isFinite(vid.duration) && !isScrubbing) renderProgress(vid.currentTime);
 				});
 				vid.addEventListener("ended", () => {
-					localStorage.removeItem(resumeKey);
+					clearResumeTime(resumeKey);
 				});
 				const renderProgress = (time) => {
 					if (!isFinite(vid.duration)) return;
@@ -1305,7 +1343,7 @@
 						} else setQuality(-1, "Auto", autoItem, { mode: "auto" });
 						vid.play().catch(() => btnBig.classList.add("visible"));
 					});
-					const savedTime = parseFloat(localStorage.getItem(resumeKey));
+					const savedTime = parseFloat(readResumeTime(resumeKey));
 					if (Number.isFinite(savedTime) && savedTime > 1) vid.addEventListener("loadedmetadata", () => {
 						if (Number.isFinite(vid.duration)) vid.currentTime = Math.min(savedTime, vid.duration - 1);
 						else vid.currentTime = savedTime;

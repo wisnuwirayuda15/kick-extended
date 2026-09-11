@@ -36,8 +36,16 @@ export const SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR =
 /** Kick's chat pane, reused to host chat replay. */
 export const KICK_CHAT_SELECTOR = "#chatroom-messages";
 
+/**
+ * localStorage prefixes. Writes use STORAGE_PREFIX; reads fall back to
+ * LEGACY_STORAGE_PREFIX and migrate the value across, so the rebrand does not
+ * wipe resume positions and settings that are already in the browser.
+ */
+export const STORAGE_PREFIX = "kick_extended_";
+export const LEGACY_STORAGE_PREFIX = "kick_unlocker_";
+
 /** Remembers that the user prefers the custom player on normal VOD pages. */
-export const AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
+export const AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
 
 /**
  * Kick mounts the <video> long before it is usable, so auto-switching waits
