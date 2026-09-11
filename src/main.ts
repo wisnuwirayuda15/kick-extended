@@ -36,6 +36,7 @@ import {
   resolveStream,
 } from "./lib/kick-api.ts";
 import { ChatController } from "./chat/chat-controller.ts";
+import { state } from "./state.ts";
 
 (function () {
   "use strict";
@@ -44,11 +45,6 @@ import { ChatController } from "./chat/chat-controller.ts";
 
   GM_addStyle(css);
 
-  let activeHls = null;
-  let activeChatController = null;
-  let nativeExternalCache = null;
-  let isUnlocking = false;
-  let activePlayerUi = null;
   let globalPlayerListenersBound = false;
 
 
@@ -56,7 +52,7 @@ import { ChatController } from "./chat/chat-controller.ts";
     if (globalPlayerListenersBound) return;
 
     document.addEventListener("click", (event) => {
-      [activePlayerUi?.qualWrap, activePlayerUi?.extWrap].forEach((wrap) => {
+      [state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
         if (!wrap || !wrap.isConnected) return;
         if (!wrap.contains(event.target)) wrap.classList.remove("open");
       });
@@ -75,7 +71,7 @@ import { ChatController } from "./chat/chat-controller.ts";
     document.addEventListener(
       "keydown",
       (event) => {
-        const playerUi = activePlayerUi;
+        const playerUi = state.activePlayerUi;
         const videoElement = playerUi?.vid;
         if (!videoElement || !videoElement.isConnected) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -178,7 +174,6 @@ import { ChatController } from "./chat/chat-controller.ts";
     });
   }
 
-  let autoSwitchTimer = null;
 
   function makeVideoTitle(result) {
     const raw = result?.video?.session_title || document.title || "kick-vod";
@@ -295,25 +290,25 @@ import { ChatController } from "./chat/chat-controller.ts";
   // hls.js keeps feeding it, so an SPA navigation has to tear this down by
   // hand rather than relying on the element going away.
   function destroyCustomPlayer() {
-    if (activeHls) {
+    if (state.activeHls) {
       try {
-        activeHls.destroy();
+        state.activeHls.destroy();
       } catch (e) {
         /* already gone */
       }
-      activeHls = null;
+      state.activeHls = null;
     }
 
-    if (activeChatController) {
+    if (state.activeChatController) {
       try {
-        activeChatController.stop();
+        state.activeChatController.stop();
       } catch (e) {
         /* already gone */
       }
-      activeChatController = null;
+      state.activeChatController = null;
     }
 
-    const customVideo = activePlayerUi?.vid || document.querySelector("#k-video");
+    const customVideo = state.activePlayerUi?.vid || document.querySelector("#k-video");
     if (customVideo) {
       try {
         customVideo.pause();
@@ -333,11 +328,11 @@ import { ChatController } from "./chat/chat-controller.ts";
       .querySelectorAll("[data-kick-unlocker-processing]")
       .forEach((el) => delete (el as any).dataset.kickUnlockerProcessing);
 
-    clearTimeout(autoSwitchTimer);
-    autoSwitchTimer = null;
-    nativeExternalCache = null;
-    activePlayerUi = null;
-    isUnlocking = false;
+    clearTimeout(state.autoSwitchTimer);
+    state.autoSwitchTimer = null;
+    state.nativeExternalCache = null;
+    state.activePlayerUi = null;
+    state.isUnlocking = false;
   }
 
   let lastHref = window.location.href;
@@ -419,7 +414,7 @@ import { ChatController } from "./chat/chat-controller.ts";
       const videoSlug = pathParts[2];
       const cacheKey = `${channelSlug}/${videoSlug}`;
 
-      if (nativeExternalCache?.key !== cacheKey) {
+      if (state.nativeExternalCache?.key !== cacheKey) {
         button.dataset.busy = "1";
         setLabel("Loading...", null);
         const resolved = await resolveStream(channelSlug, videoSlug);
@@ -430,10 +425,10 @@ import { ChatController } from "./chat/chat-controller.ts";
           setTimeout(() => setLabel(defaultLabel, null), 2500);
           return;
         }
-        nativeExternalCache = { key: cacheKey, ...resolved };
+        state.nativeExternalCache = { key: cacheKey, ...resolved };
       }
 
-      GM_setClipboard(nativeExternalCache.streamUrl, "text");
+      GM_setClipboard(state.nativeExternalCache.streamUrl, "text");
       setLabel("Copied", "done");
       setTimeout(() => setLabel(defaultLabel, null), 1600);
     });
@@ -472,7 +467,7 @@ import { ChatController } from "./chat/chat-controller.ts";
   }
 
   function ensureCustomPlayerToggle() {
-    if (!isVodPage() || isUnlocking) return;
+    if (!isVodPage() || state.isUnlocking) return;
     // Sub-only pages are handled automatically by the observer below.
     if (document.querySelector(SUBSCRIBER_ONLY_SELECTOR)) return;
 
@@ -483,12 +478,12 @@ import { ChatController } from "./chat/chat-controller.ts";
       unlockVideo(null, { explicitContainer: container, manualSwitch: true });
 
     if (getPreferCustom()) {
-      if (autoSwitchTimer || !isNativePlayerReady()) return;
+      if (state.autoSwitchTimer || !isNativePlayerReady()) return;
       // Let React finish its mount pass before we tear the container down.
       // Re-check afterwards in case the DOM moved during the wait.
-      autoSwitchTimer = setTimeout(() => {
-        autoSwitchTimer = null;
-        if (isUnlocking || !isNativePlayerReady()) return;
+      state.autoSwitchTimer = setTimeout(() => {
+        state.autoSwitchTimer = null;
+        if (state.isUnlocking || !isNativePlayerReady()) return;
         const readyContainer: any = findNativePlayerContainer();
         if (!readyContainer || readyContainer.dataset.kickUnlockerProcessing)
           return;
@@ -564,21 +559,21 @@ import { ChatController } from "./chat/chat-controller.ts";
 
       wrap.classList.add("open");
 
-      if (nativeExternalCache?.key !== cacheKey) {
+      if (state.nativeExternalCache?.key !== cacheKey) {
         menu.innerHTML = `<div class="k-ext-heading">Mengambil stream URL...</div>`;
         const resolved = await resolveStream(channelSlug, videoSlug);
         if (!resolved) {
           menu.innerHTML = `<div class="k-ext-heading">Stream tidak ketemu</div>`;
           return;
         }
-        nativeExternalCache = { key: cacheKey, ...resolved };
+        state.nativeExternalCache = { key: cacheKey, ...resolved };
       }
 
       populateExternalMenu(
         menu,
         buildExternalTargets(
-          nativeExternalCache.streamUrl,
-          makeVideoTitle(nativeExternalCache.result),
+          state.nativeExternalCache.streamUrl,
+          makeVideoTitle(state.nativeExternalCache.result),
         ),
         closeMenu,
       );
@@ -595,7 +590,7 @@ import { ChatController } from "./chat/chat-controller.ts";
 
   async function unlockVideo(triggerElement, options: any = {}) {
     const { explicitContainer = null, manualSwitch = false } = options;
-    if (isUnlocking) return;
+    if (state.isUnlocking) return;
     const container =
       explicitContainer ||
       triggerElement?.closest(PLAYER_CONTAINER_SELECTOR) ||
@@ -610,7 +605,7 @@ import { ChatController } from "./chat/chat-controller.ts";
     const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
     const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
 
-    isUnlocking = true;
+    state.isUnlocking = true;
 
     try {
       // When we are replacing a native player that already works, resolve the
@@ -648,9 +643,9 @@ import { ChatController } from "./chat/chat-controller.ts";
         container.style.aspectRatio = "16 / 9";
       }
 
-      if (activeHls) {
-        activeHls.destroy();
-        activeHls = null;
+      if (state.activeHls) {
+        state.activeHls.destroy();
+        state.activeHls = null;
       }
 
       // --- STEP 1: FULL WIPE & SPLASH ---
@@ -701,7 +696,7 @@ import { ChatController } from "./chat/chat-controller.ts";
         chatRoot,
       );
       chatController.init(null);
-      activeChatController = chatController;
+      state.activeChatController = chatController;
 
       const finalUrl =
         streamUrl +
@@ -964,7 +959,7 @@ import { ChatController } from "./chat/chat-controller.ts";
         button.addEventListener("dblclick", (event) => event.stopPropagation());
       });
 
-      activePlayerUi = {
+      state.activePlayerUi = {
         vid,
         pRoot,
         qualWrap,
@@ -1236,7 +1231,7 @@ import { ChatController } from "./chat/chat-controller.ts";
           enableWorker: false,
           lowLatencyMode: true,
         });
-        activeHls = hls;
+        state.activeHls = hls;
         hls.loadSource(finalUrl);
         hls.attachMedia(vid);
         hls.on(Hls.Events.MANIFEST_LOADING, () =>
@@ -1353,7 +1348,7 @@ import { ChatController } from "./chat/chat-controller.ts";
       console.error(e);
       if (container) delete container.dataset.kickUnlockerProcessing;
     } finally {
-      isUnlocking = false;
+      state.isUnlocking = false;
     }
   }
 
@@ -1361,7 +1356,7 @@ import { ChatController } from "./chat/chat-controller.ts";
     handleLocationChange();
 
     // React can rip our player out without any navigation event firing.
-    if (activePlayerUi?.vid && !activePlayerUi.vid.isConnected) {
+    if (state.activePlayerUi?.vid && !state.activePlayerUi.vid.isConnected) {
       destroyCustomPlayer();
     }
 
@@ -1378,7 +1373,7 @@ import { ChatController } from "./chat/chat-controller.ts";
       if (
         outerContainer &&
         !(outerContainer as any).dataset.kickUnlockerProcessing &&
-        !isUnlocking
+        !state.isUnlocking
       ) {
         unlockVideo(subscriberOverlay);
       }

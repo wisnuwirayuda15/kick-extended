@@ -401,20 +401,23 @@
 			this.lastRenderedMsgId = lastM.id;
 		}
 	};
+	var state = {
+		activeHls: null,
+		activeChatController: null,
+		nativeExternalCache: null,
+		isUnlocking: false,
+		activePlayerUi: null,
+		autoSwitchTimer: null
+	};
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
 		GM_addStyle(styles_default);
-		let activeHls = null;
-		let activeChatController = null;
-		let nativeExternalCache = null;
-		let isUnlocking = false;
-		let activePlayerUi = null;
 		let globalPlayerListenersBound = false;
 		function bindGlobalPlayerListeners() {
 			if (globalPlayerListenersBound) return;
 			document.addEventListener("click", (event) => {
-				[activePlayerUi?.qualWrap, activePlayerUi?.extWrap].forEach((wrap) => {
+				[state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
 					if (!wrap || !wrap.isConnected) return;
 					if (!wrap.contains(event.target)) wrap.classList.remove("open");
 				});
@@ -424,7 +427,7 @@
 				if (focusHolder) focusHolder.blur();
 			});
 			document.addEventListener("keydown", (event) => {
-				const playerUi = activePlayerUi;
+				const playerUi = state.activePlayerUi;
 				const videoElement = playerUi?.vid;
 				if (!videoElement || !videoElement.isConnected) return;
 				if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -494,7 +497,6 @@
 				} catch (e) {}
 			});
 		}
-		let autoSwitchTimer = null;
 		function makeVideoTitle(result) {
 			return (result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
 		}
@@ -590,19 +592,19 @@
 			});
 		}
 		function destroyCustomPlayer() {
-			if (activeHls) {
+			if (state.activeHls) {
 				try {
-					activeHls.destroy();
+					state.activeHls.destroy();
 				} catch (e) {}
-				activeHls = null;
+				state.activeHls = null;
 			}
-			if (activeChatController) {
+			if (state.activeChatController) {
 				try {
-					activeChatController.stop();
+					state.activeChatController.stop();
 				} catch (e) {}
-				activeChatController = null;
+				state.activeChatController = null;
 			}
-			const customVideo = activePlayerUi?.vid || document.querySelector("#k-video");
+			const customVideo = state.activePlayerUi?.vid || document.querySelector("#k-video");
 			if (customVideo) {
 				try {
 					customVideo.pause();
@@ -616,11 +618,11 @@
 			document.querySelector("#k-toast")?.remove();
 			document.querySelector("#k-copy-url-btn")?.remove();
 			document.querySelectorAll("[data-kick-unlocker-processing]").forEach((el) => delete el.dataset.kickUnlockerProcessing);
-			clearTimeout(autoSwitchTimer);
-			autoSwitchTimer = null;
-			nativeExternalCache = null;
-			activePlayerUi = null;
-			isUnlocking = false;
+			clearTimeout(state.autoSwitchTimer);
+			state.autoSwitchTimer = null;
+			state.nativeExternalCache = null;
+			state.activePlayerUi = null;
+			state.isUnlocking = false;
 		}
 		let lastHref = window.location.href;
 		function handleLocationChange() {
@@ -680,7 +682,7 @@
 				const channelSlug = pathParts[0];
 				const videoSlug = pathParts[2];
 				const cacheKey = `${channelSlug}/${videoSlug}`;
-				if (nativeExternalCache?.key !== cacheKey) {
+				if (state.nativeExternalCache?.key !== cacheKey) {
 					button.dataset.busy = "1";
 					setLabel("Loading...", null);
 					const resolved = await resolveStream(channelSlug, videoSlug);
@@ -690,12 +692,12 @@
 						setTimeout(() => setLabel(defaultLabel, null), 2500);
 						return;
 					}
-					nativeExternalCache = {
+					state.nativeExternalCache = {
 						key: cacheKey,
 						...resolved
 					};
 				}
-				GM_setClipboard(nativeExternalCache.streamUrl, "text");
+				GM_setClipboard(state.nativeExternalCache.streamUrl, "text");
 				setLabel("Copied", "done");
 				setTimeout(() => setLabel(defaultLabel, null), 1600);
 			});
@@ -718,7 +720,7 @@
 			return bestMatch;
 		}
 		function ensureCustomPlayerToggle() {
-			if (!isVodPage() || isUnlocking) return;
+			if (!isVodPage() || state.isUnlocking) return;
 			if (document.querySelector("[data-testid=\"video-subscriber-only\"]")) return;
 			const container = findNativePlayerContainer();
 			if (!container || container.dataset.kickUnlockerProcessing) return;
@@ -727,10 +729,10 @@
 				manualSwitch: true
 			});
 			if (getPreferCustom()) {
-				if (autoSwitchTimer || !isNativePlayerReady()) return;
-				autoSwitchTimer = setTimeout(() => {
-					autoSwitchTimer = null;
-					if (isUnlocking || !isNativePlayerReady()) return;
+				if (state.autoSwitchTimer || !isNativePlayerReady()) return;
+				state.autoSwitchTimer = setTimeout(() => {
+					state.autoSwitchTimer = null;
+					if (state.isUnlocking || !isNativePlayerReady()) return;
 					const readyContainer = findNativePlayerContainer();
 					if (!readyContainer || readyContainer.dataset.kickUnlockerProcessing) return;
 					showToast("KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.", 6e3);
@@ -787,19 +789,19 @@
 				const videoSlug = pathParts[2];
 				const cacheKey = `${channelSlug}/${videoSlug}`;
 				wrap.classList.add("open");
-				if (nativeExternalCache?.key !== cacheKey) {
+				if (state.nativeExternalCache?.key !== cacheKey) {
 					menu.innerHTML = `<div class="k-ext-heading">Mengambil stream URL...</div>`;
 					const resolved = await resolveStream(channelSlug, videoSlug);
 					if (!resolved) {
 						menu.innerHTML = `<div class="k-ext-heading">Stream tidak ketemu</div>`;
 						return;
 					}
-					nativeExternalCache = {
+					state.nativeExternalCache = {
 						key: cacheKey,
 						...resolved
 					};
 				}
-				populateExternalMenu(menu, buildExternalTargets(nativeExternalCache.streamUrl, makeVideoTitle(nativeExternalCache.result)), closeMenu);
+				populateExternalMenu(menu, buildExternalTargets(state.nativeExternalCache.streamUrl, makeVideoTitle(state.nativeExternalCache.result)), closeMenu);
 			});
 			document.addEventListener("click", (event) => {
 				if (wrap.isConnected && !wrap.contains(event.target)) closeMenu();
@@ -810,7 +812,7 @@
 		}
 		async function unlockVideo(triggerElement, options = {}) {
 			const { explicitContainer = null, manualSwitch = false } = options;
-			if (isUnlocking) return;
+			if (state.isUnlocking) return;
 			const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
 			if (!container || container.dataset.kickUnlockerProcessing) return;
 			const pathParts = window.location.pathname.split("/").filter(Boolean);
@@ -820,7 +822,7 @@
 			const resumeKey = getResumeKey(channelSlug, videoSlug);
 			const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
 			const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
-			isUnlocking = true;
+			state.isUnlocking = true;
 			try {
 				let prefetched = null;
 				if (manualSwitch) {
@@ -838,9 +840,9 @@
 				container.style.minHeight = `${fallbackMinHeight}px`;
 				if (containerRect.width > 0 && containerRect.height > 0) container.style.aspectRatio = `${containerRect.width} / ${containerRect.height}`;
 				else container.style.aspectRatio = "16 / 9";
-				if (activeHls) {
-					activeHls.destroy();
-					activeHls = null;
+				if (state.activeHls) {
+					state.activeHls.destroy();
+					state.activeHls = null;
 				}
 				container.innerHTML = `
             <div style="width:100%;height:100%;min-height:${fallbackMinHeight}px;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
@@ -873,7 +875,7 @@
 				const startTime = new Date(result.video.start_time.replace(" ", "T") + (result.video.start_time.endsWith("Z") ? "" : "Z"));
 				const chatController = new ChatController(result.channelId, startTime, chatRoot);
 				chatController.init(null);
-				activeChatController = chatController;
+				state.activeChatController = chatController;
 				const finalUrl = streamUrl + (streamUrl.includes("?") ? "&" : "?") + "kick_ts=" + Date.now();
 				let videoParent = existingChat ? container : container.querySelector("#unlocker-video-area");
 				videoParent.innerHTML = `
@@ -1068,7 +1070,7 @@
 					});
 					button.addEventListener("dblclick", (event) => event.stopPropagation());
 				});
-				activePlayerUi = {
+				state.activePlayerUi = {
 					vid,
 					pRoot,
 					qualWrap,
@@ -1289,7 +1291,7 @@
 						enableWorker: false,
 						lowLatencyMode: true
 					});
-					activeHls = hls;
+					state.activeHls = hls;
 					hls.loadSource(finalUrl);
 					hls.attachMedia(vid);
 					hls.on(hls_js.default.Events.MANIFEST_LOADING, () => setLoadingState(true, { immediate: true }));
@@ -1361,17 +1363,17 @@
 				console.error(e);
 				if (container) delete container.dataset.kickUnlockerProcessing;
 			} finally {
-				isUnlocking = false;
+				state.isUnlocking = false;
 			}
 		}
 		new MutationObserver(() => {
 			handleLocationChange();
-			if (activePlayerUi?.vid && !activePlayerUi.vid.isConnected) destroyCustomPlayer();
+			if (state.activePlayerUi?.vid && !state.activePlayerUi.vid.isConnected) destroyCustomPlayer();
 			const subscriberOverlay = document.querySelector(SUBSCRIBER_ONLY_SELECTOR);
 			ensureCopyUrlButton();
 			if (subscriberOverlay) {
 				const outerContainer = subscriberOverlay.closest(SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR);
-				if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !isUnlocking) unlockVideo(subscriberOverlay);
+				if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !state.isUnlocking) unlockVideo(subscriberOverlay);
 				return;
 			}
 			ensureCustomPlayerToggle();
