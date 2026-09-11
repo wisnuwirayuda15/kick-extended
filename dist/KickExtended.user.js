@@ -1176,6 +1176,99 @@
 			setLoadingState
 		};
 	}
+	async function unlockVideo(triggerElement, options = {}) {
+		const { explicitContainer = null, manualSwitch = false } = options;
+		if (state.isUnlocking) return;
+		const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
+		if (!container || container.dataset.kickUnlockerProcessing) return;
+		const pathParts = window.location.pathname.split("/").filter(Boolean);
+		let channelSlug = pathParts[0];
+		let videoSlug = pathParts[2];
+		if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
+		const resumeKey = getResumeKey(channelSlug, videoSlug);
+		const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
+		const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
+		state.isUnlocking = true;
+		try {
+			let prefetched = null;
+			if (manualSwitch) {
+				prefetched = await resolveStream(channelSlug, videoSlug);
+				if (!prefetched) {
+					clearPreferCustom();
+					showToast("KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.");
+					return;
+				}
+			}
+			stopNativePlayback(container);
+			const containerRect = container.getBoundingClientRect();
+			const fallbackMinHeight = Math.max(Math.round(containerRect.height || 0), Math.round((containerRect.width || 0) * 9 / 16), 360);
+			container.style.width = "100%";
+			container.style.minHeight = `${fallbackMinHeight}px`;
+			if (containerRect.width > 0 && containerRect.height > 0) container.style.aspectRatio = `${containerRect.width} / ${containerRect.height}`;
+			else container.style.aspectRatio = "16 / 9";
+			if (state.activeHls) {
+				state.activeHls.destroy();
+				state.activeHls = null;
+			}
+			container.innerHTML = buildSplashMarkup(fallbackMinHeight);
+			const result = prefetched?.result || await getVideoMetadata(channelSlug, videoSlug);
+			if (!result) return;
+			const streamUrl = prefetched?.streamUrl || await findStreamUrlFromMetadata(result);
+			if (!streamUrl) {
+				container.innerHTML = buildStreamNotFoundMarkup();
+				return;
+			}
+			container.dataset.kickUnlockerProcessing = "true";
+			container.innerHTML = "";
+			container.style.background = "#000";
+			const existingChat = document.querySelector(KICK_CHAT_SELECTOR);
+			let chatRoot = null;
+			if (existingChat) {
+				existingChat.innerHTML = "";
+				existingChat.style.display = "block";
+				chatRoot = existingChat;
+			} else {
+				container.innerHTML = buildChatShellMarkup();
+				chatRoot = container.querySelector("#unlocker-chat-area");
+			}
+			const startTime = new Date(result.video.start_time.replace(" ", "T") + (result.video.start_time.endsWith("Z") ? "" : "Z"));
+			const chatController = new ChatController(result.channelId, startTime, chatRoot);
+			chatController.init(null);
+			state.activeChatController = chatController;
+			const finalUrl = streamUrl + (streamUrl.includes("?") ? "&" : "?") + "kick_ts=" + Date.now();
+			let videoParent = existingChat ? container : container.querySelector("#unlocker-video-area");
+			videoParent.innerHTML = buildPlayerMarkup();
+			const { vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState } = createControls({
+				videoParent,
+				manualSwitch,
+				resumeKey,
+				playerSettingsKey,
+				savedPlayerSettings,
+				streamUrl,
+				result,
+				chatController,
+				finalUrl
+			});
+			setupPlayback({
+				vid,
+				btnBig,
+				qualBtn,
+				qualMenu,
+				qualWrap,
+				setLoadingState
+			}, {
+				finalUrl,
+				resumeKey,
+				playerSettingsKey,
+				savedPlayerSettings
+			});
+		} catch (e) {
+			console.error(e);
+			if (container) delete container.dataset.kickUnlockerProcessing;
+		} finally {
+			state.isUnlocking = false;
+		}
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -1320,99 +1413,6 @@
 			wrap.appendChild(button);
 			wrap.appendChild(menu);
 			switchButton.parentElement.insertBefore(wrap, switchButton);
-		}
-		async function unlockVideo(triggerElement, options = {}) {
-			const { explicitContainer = null, manualSwitch = false } = options;
-			if (state.isUnlocking) return;
-			const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
-			if (!container || container.dataset.kickUnlockerProcessing) return;
-			const pathParts = window.location.pathname.split("/").filter(Boolean);
-			let channelSlug = pathParts[0];
-			let videoSlug = pathParts[2];
-			if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
-			const resumeKey = getResumeKey(channelSlug, videoSlug);
-			const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
-			const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
-			state.isUnlocking = true;
-			try {
-				let prefetched = null;
-				if (manualSwitch) {
-					prefetched = await resolveStream(channelSlug, videoSlug);
-					if (!prefetched) {
-						clearPreferCustom();
-						showToast("KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.");
-						return;
-					}
-				}
-				stopNativePlayback(container);
-				const containerRect = container.getBoundingClientRect();
-				const fallbackMinHeight = Math.max(Math.round(containerRect.height || 0), Math.round((containerRect.width || 0) * 9 / 16), 360);
-				container.style.width = "100%";
-				container.style.minHeight = `${fallbackMinHeight}px`;
-				if (containerRect.width > 0 && containerRect.height > 0) container.style.aspectRatio = `${containerRect.width} / ${containerRect.height}`;
-				else container.style.aspectRatio = "16 / 9";
-				if (state.activeHls) {
-					state.activeHls.destroy();
-					state.activeHls = null;
-				}
-				container.innerHTML = buildSplashMarkup(fallbackMinHeight);
-				const result = prefetched?.result || await getVideoMetadata(channelSlug, videoSlug);
-				if (!result) return;
-				const streamUrl = prefetched?.streamUrl || await findStreamUrlFromMetadata(result);
-				if (!streamUrl) {
-					container.innerHTML = buildStreamNotFoundMarkup();
-					return;
-				}
-				container.dataset.kickUnlockerProcessing = "true";
-				container.innerHTML = "";
-				container.style.background = "#000";
-				const existingChat = document.querySelector(KICK_CHAT_SELECTOR);
-				let chatRoot = null;
-				if (existingChat) {
-					existingChat.innerHTML = "";
-					existingChat.style.display = "block";
-					chatRoot = existingChat;
-				} else {
-					container.innerHTML = buildChatShellMarkup();
-					chatRoot = container.querySelector("#unlocker-chat-area");
-				}
-				const startTime = new Date(result.video.start_time.replace(" ", "T") + (result.video.start_time.endsWith("Z") ? "" : "Z"));
-				const chatController = new ChatController(result.channelId, startTime, chatRoot);
-				chatController.init(null);
-				state.activeChatController = chatController;
-				const finalUrl = streamUrl + (streamUrl.includes("?") ? "&" : "?") + "kick_ts=" + Date.now();
-				let videoParent = existingChat ? container : container.querySelector("#unlocker-video-area");
-				videoParent.innerHTML = buildPlayerMarkup();
-				const { vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState } = createControls({
-					videoParent,
-					manualSwitch,
-					resumeKey,
-					playerSettingsKey,
-					savedPlayerSettings,
-					streamUrl,
-					result,
-					chatController,
-					finalUrl
-				});
-				setupPlayback({
-					vid,
-					btnBig,
-					qualBtn,
-					qualMenu,
-					qualWrap,
-					setLoadingState
-				}, {
-					finalUrl,
-					resumeKey,
-					playerSettingsKey,
-					savedPlayerSettings
-				});
-			} catch (e) {
-				console.error(e);
-				if (container) delete container.dataset.kickUnlockerProcessing;
-			} finally {
-				state.isUnlocking = false;
-			}
 		}
 		new MutationObserver(() => {
 			handleLocationChange();
