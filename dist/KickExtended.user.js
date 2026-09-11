@@ -70,27 +70,39 @@
 	var SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR = ".relative.flex.flex-col.items-center.justify-center.overflow-hidden.rounded";
 	var KICK_CHAT_SELECTOR = "#chatroom-messages";
 	var AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
+	function gmFetch(url, opts = {}) {
+		return new Promise((resolve, reject) => {
+			GM_xmlhttpRequest({
+				method: opts.method || "GET",
+				url,
+				headers: opts.headers || {},
+				timeout: opts.timeout || 15e3,
+				onload: (r) => resolve({
+					ok: r.status >= 200 && r.status < 300,
+					status: r.status,
+					json: () => JSON.parse(r.responseText),
+					text: () => r.responseText
+				}),
+				onerror: () => reject(new Error("network")),
+				ontimeout: () => reject(new Error("timeout"))
+			});
+		});
+	}
+	function checkStreamUrl(url) {
+		return new Promise((resolve) => {
+			GM_xmlhttpRequest({
+				method: "HEAD",
+				url,
+				timeout: 3e3,
+				onload: (r) => resolve(r.status >= 200 && r.status < 300 ? url : null),
+				onerror: () => resolve(null),
+				ontimeout: () => resolve(null)
+			});
+		});
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
-		function gmFetch(url, opts = {}) {
-			return new Promise((resolve, reject) => {
-				GM_xmlhttpRequest({
-					method: opts.method || "GET",
-					url,
-					headers: opts.headers || {},
-					timeout: opts.timeout || 15e3,
-					onload: (r) => resolve({
-						ok: r.status >= 200 && r.status < 300,
-						status: r.status,
-						json: () => JSON.parse(r.responseText),
-						text: () => r.responseText
-					}),
-					onerror: () => reject(new Error("network")),
-					ontimeout: () => reject(new Error("timeout"))
-				});
-			});
-		}
 		GM_addStyle(styles_default);
 		let activeHls = null;
 		let activeChatController = null;
@@ -226,18 +238,6 @@
 				playerUi.showControls?.();
 			}, true);
 			globalPlayerListenersBound = true;
-		}
-		function checkStreamUrl(url) {
-			return new Promise((resolve) => {
-				GM_xmlhttpRequest({
-					method: "HEAD",
-					url,
-					timeout: 3e3,
-					onload: (r) => resolve(r.status >= 200 && r.status < 300 ? url : null),
-					onerror: () => resolve(null),
-					ontimeout: () => resolve(null)
-				});
-			});
 		}
 		async function getVideoMetadata(channelSlug, videoSlug) {
 			try {
