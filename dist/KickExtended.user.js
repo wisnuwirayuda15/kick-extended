@@ -174,6 +174,20 @@
 		}
 		return false;
 	}
+	function formatTime(seconds) {
+		if (!isFinite(seconds) || seconds < 0) return "0:00";
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor(seconds % 3600 / 60);
+		const s = Math.floor(seconds % 60);
+		if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+		else return `${m}:${s.toString().padStart(2, "0")}`;
+	}
+	function getVolumeIcon(volume) {
+		if (volume <= 0) return ICONS.volumeMute;
+		if (volume < .2) return ICONS.volumeLow;
+		if (volume < .5) return ICONS.volumeMedium;
+		return ICONS.volumeHigh;
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -443,20 +457,6 @@
 				this.chatList.scrollTop = this.chatList.scrollHeight;
 				this.lastRenderedMsgId = lastM.id;
 			}
-		}
-		function formatTime(seconds) {
-			if (!isFinite(seconds) || seconds < 0) return "0:00";
-			const h = Math.floor(seconds / 3600);
-			const m = Math.floor(seconds % 3600 / 60);
-			const s = Math.floor(seconds % 60);
-			if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-			else return `${m}:${s.toString().padStart(2, "0")}`;
-		}
-		function getVolumeIcon(volume) {
-			if (volume <= 0) return ICONS.volumeMute;
-			if (volume < .2) return ICONS.volumeLow;
-			if (volume < .5) return ICONS.volumeMedium;
-			return ICONS.volumeHigh;
 		}
 		function isVodPage() {
 			const pathParts = window.location.pathname.split("/").filter(Boolean);
