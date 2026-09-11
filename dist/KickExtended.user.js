@@ -595,80 +595,80 @@
 		});
 		anchor.parentElement.insertBefore(button, anchor.nextSibling);
 	}
+	var globalPlayerListenersBound = false;
+	function bindGlobalPlayerListeners() {
+		if (globalPlayerListenersBound) return;
+		document.addEventListener("click", (event) => {
+			[state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
+				if (!wrap || !wrap.isConnected) return;
+				if (!wrap.contains(event.target)) wrap.classList.remove("open");
+			});
+		});
+		document.addEventListener("pointerup", (event) => {
+			const focusHolder = event.target?.closest?.("#k-controls button, #k-controls input, #k-big-play, .k-center-seek");
+			if (focusHolder) focusHolder.blur();
+		});
+		document.addEventListener("keydown", (event) => {
+			const playerUi = state.activePlayerUi;
+			const videoElement = playerUi?.vid;
+			if (!videoElement || !videoElement.isConnected) return;
+			if (event.ctrlKey || event.metaKey || event.altKey) return;
+			const target = event.target;
+			if (target?.isContentEditable || [
+				"INPUT",
+				"TEXTAREA",
+				"SELECT"
+			].includes(target?.tagName)) return;
+			const seekBy = (seconds) => {
+				if (!isFinite(videoElement.duration)) return;
+				videoElement.currentTime = Math.min(Math.max(videoElement.currentTime + seconds, 0), videoElement.duration);
+				playerUi.showSeekIndicator(seconds > 0 ? "forward" : "backward");
+				playerUi.renderProgress?.(videoElement.currentTime);
+			};
+			const seekToPercent = (percent) => {
+				if (!isFinite(videoElement.duration)) return;
+				const target = videoElement.duration * percent;
+				const direction = target > videoElement.currentTime ? "forward" : "backward";
+				videoElement.currentTime = target;
+				playerUi.showSeekIndicator(direction);
+				playerUi.renderProgress?.(target);
+			};
+			const nudgeVolume = (delta) => playerUi.applyVolume(Math.min(Math.max(videoElement.volume + delta, 0), 1));
+			const setRate = (delta) => {
+				videoElement.playbackRate = Math.min(Math.max(videoElement.playbackRate + delta, .25), 4);
+			};
+			const shortcuts = {
+				arrowright: () => seekBy(5),
+				arrowleft: () => seekBy(-5),
+				l: () => seekBy(10),
+				j: () => seekBy(-10),
+				arrowup: () => nudgeVolume(.05),
+				arrowdown: () => nudgeVolume(-.05),
+				" ": () => playerUi.togglePlay(),
+				k: () => playerUi.togglePlay(),
+				f: () => playerUi.btnFs.click(),
+				m: () => playerUi.applyVolume(videoElement.volume === 0 ? .5 : 0),
+				">": () => setRate(.25),
+				".": () => setRate(.25),
+				"<": () => setRate(-.25),
+				",": () => setRate(-.25),
+				home: () => seekToPercent(0),
+				end: () => seekToPercent(.999)
+			};
+			for (let digit = 0; digit <= 9; digit++) shortcuts[String(digit)] = () => seekToPercent(digit / 10);
+			const action = shortcuts[event.key.toLowerCase()];
+			if (!action) return;
+			event.preventDefault();
+			event.stopPropagation();
+			action();
+			playerUi.showControls?.();
+		}, true);
+		globalPlayerListenersBound = true;
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
 		GM_addStyle(styles_default);
-		let globalPlayerListenersBound = false;
-		function bindGlobalPlayerListeners() {
-			if (globalPlayerListenersBound) return;
-			document.addEventListener("click", (event) => {
-				[state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
-					if (!wrap || !wrap.isConnected) return;
-					if (!wrap.contains(event.target)) wrap.classList.remove("open");
-				});
-			});
-			document.addEventListener("pointerup", (event) => {
-				const focusHolder = event.target?.closest?.("#k-controls button, #k-controls input, #k-big-play, .k-center-seek");
-				if (focusHolder) focusHolder.blur();
-			});
-			document.addEventListener("keydown", (event) => {
-				const playerUi = state.activePlayerUi;
-				const videoElement = playerUi?.vid;
-				if (!videoElement || !videoElement.isConnected) return;
-				if (event.ctrlKey || event.metaKey || event.altKey) return;
-				const target = event.target;
-				if (target?.isContentEditable || [
-					"INPUT",
-					"TEXTAREA",
-					"SELECT"
-				].includes(target?.tagName)) return;
-				const seekBy = (seconds) => {
-					if (!isFinite(videoElement.duration)) return;
-					videoElement.currentTime = Math.min(Math.max(videoElement.currentTime + seconds, 0), videoElement.duration);
-					playerUi.showSeekIndicator(seconds > 0 ? "forward" : "backward");
-					playerUi.renderProgress?.(videoElement.currentTime);
-				};
-				const seekToPercent = (percent) => {
-					if (!isFinite(videoElement.duration)) return;
-					const target = videoElement.duration * percent;
-					const direction = target > videoElement.currentTime ? "forward" : "backward";
-					videoElement.currentTime = target;
-					playerUi.showSeekIndicator(direction);
-					playerUi.renderProgress?.(target);
-				};
-				const nudgeVolume = (delta) => playerUi.applyVolume(Math.min(Math.max(videoElement.volume + delta, 0), 1));
-				const setRate = (delta) => {
-					videoElement.playbackRate = Math.min(Math.max(videoElement.playbackRate + delta, .25), 4);
-				};
-				const shortcuts = {
-					arrowright: () => seekBy(5),
-					arrowleft: () => seekBy(-5),
-					l: () => seekBy(10),
-					j: () => seekBy(-10),
-					arrowup: () => nudgeVolume(.05),
-					arrowdown: () => nudgeVolume(-.05),
-					" ": () => playerUi.togglePlay(),
-					k: () => playerUi.togglePlay(),
-					f: () => playerUi.btnFs.click(),
-					m: () => playerUi.applyVolume(videoElement.volume === 0 ? .5 : 0),
-					">": () => setRate(.25),
-					".": () => setRate(.25),
-					"<": () => setRate(-.25),
-					",": () => setRate(-.25),
-					home: () => seekToPercent(0),
-					end: () => seekToPercent(.999)
-				};
-				for (let digit = 0; digit <= 9; digit++) shortcuts[String(digit)] = () => seekToPercent(digit / 10);
-				const action = shortcuts[event.key.toLowerCase()];
-				if (!action) return;
-				event.preventDefault();
-				event.stopPropagation();
-				action();
-				playerUi.showControls?.();
-			}, true);
-			globalPlayerListenersBound = true;
-		}
 		function destroyCustomPlayer() {
 			if (state.activeHls) {
 				try {
