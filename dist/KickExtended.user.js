@@ -188,6 +188,14 @@
 		if (volume < .5) return ICONS.volumeMedium;
 		return ICONS.volumeHigh;
 	}
+	function showToast(message, duration = 5e3) {
+		document.querySelector("#k-toast")?.remove();
+		const toast = document.createElement("div");
+		toast.id = "k-toast";
+		toast.textContent = message;
+		document.body.appendChild(toast);
+		setTimeout(() => toast.remove(), duration);
+	}
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -621,14 +629,6 @@
 			const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
 			if (byId && byId.id !== "k-video") return byId;
 			return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
-		}
-		function showToast(message, duration = 5e3) {
-			document.querySelector("#k-toast")?.remove();
-			const toast = document.createElement("div");
-			toast.id = "k-toast";
-			toast.textContent = message;
-			document.body.appendChild(toast);
-			setTimeout(() => toast.remove(), duration);
 		}
 		function isNativePlayerReady() {
 			const nativeVideo = getNativeVideo();

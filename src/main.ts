@@ -28,6 +28,7 @@ import {
   setPreferCustom,
 } from "./lib/storage.ts";
 import { formatTime, getVolumeIcon } from "./lib/format.ts";
+import { showToast } from "./lib/toast.ts";
 
 (function () {
   "use strict";
@@ -650,15 +651,6 @@ import { formatTime, getVolumeIcon } from "./lib/format.ts";
     const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
     if (byId && byId.id !== "k-video") return byId;
     return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
-  }
-
-  function showToast(message, duration = 5000) {
-    document.querySelector("#k-toast")?.remove();
-    const toast = document.createElement("div");
-    toast.id = "k-toast";
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
   }
 
   // Kick renders the <video> tag well before the player is actually usable,
