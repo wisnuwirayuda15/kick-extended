@@ -1,0 +1,12 @@
+dist
+node_modules
+
+# Input artefacts, not this project's source. Kept exactly as received.
+KickNoSub.user.js
+KickVideoDownloader.user.js
+PROMPT.md
+
+# styles.css is the original GM_addStyle blob, moved across unchanged.
+# Keeping it byte-identical is what makes it auditable against the old script,
+# so Prettier must not reflow it.
+src/styles.css

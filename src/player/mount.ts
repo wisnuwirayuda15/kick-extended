@@ -33,7 +33,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
   if (!container || container.dataset.kickUnlockerProcessing) return;
 
   const pathParts = window.location.pathname.split("/").filter(Boolean);
-  let channelSlug = pathParts[0];
+  const channelSlug = pathParts[0];
   let videoSlug = pathParts[2];
   if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
   const resumeKey = getResumeKey(channelSlug, videoSlug);
@@ -131,10 +131,9 @@ export async function unlockVideo(triggerElement, options: any = {}) {
       (streamUrl.includes("?") ? "&" : "?") +
       "kick_ts=" +
       Date.now();
-    let videoParent =
-      existingChat ? container : (
-        container.querySelector("#unlocker-video-area")
-      );
+    const videoParent = existingChat
+      ? container
+      : container.querySelector("#unlocker-video-area");
 
     // Build Custom Player UI
     const playerHTML = buildPlayerMarkup();
@@ -150,7 +149,6 @@ export async function unlockVideo(triggerElement, options: any = {}) {
         streamUrl,
         result,
         chatController,
-        finalUrl,
       });
 
     setupPlayback(

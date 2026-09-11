@@ -4,6 +4,7 @@
 // @version      2.0.0
 // @author       Wisnu Wirayuda
 // @description  Unlock subscriber-only VODs, a custom HLS player with keyboard shortcuts and quality control, chat replay, external player handoff, and video downloads on Kick.
+// @license      Apache-2.0
 // @icon         https://kick.com/favicon.ico
 // @match        *://kick.com/*
 // @match        *://www.kick.com/*
@@ -43,23 +44,6 @@
 	}) : target, mod));
 	hls_js = __toESM(hls_js);
 	var styles_default = "/* Root player */\n#k-player { background: #000; border-radius: 14px; overflow: hidden; container-type: inline-size; }\n#k-video { width: 100%; height: 100%; object-fit: contain; background: black; }\n#k-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.25); }\n#k-progress { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #53fc18, #9dff57); }\n#k-track-tooltip {\n    position: absolute; bottom: calc(100% + 10px); left: 0;\n    transform: translateX(-50%) scale(0.96); padding: 4px 8px; border-radius: 8px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); color: #fff; font-size: 12px;\n    line-height: 1.2; white-space: nowrap; pointer-events: none; opacity: 0;\n    transition: opacity .12s ease, transform .12s ease; z-index: 35;\n}\n#k-track-tooltip-time { font-variant-numeric: tabular-nums; }\n#k-track-tooltip.visible { opacity: 1; transform: translateX(-50%) scale(1); }\n#k-track:hover { height: 8px; }\n#k-track.scrubbing { height: 8px; }\n#k-progress::after {\n    content: \"\"; position: absolute; right: 0; top: 50%; width: 13px; height: 13px;\n    border-radius: 50%; background: #53fc18; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);\n    transform: translate(50%, -50%) scale(0); transition: transform .12s ease;\n}\n#k-track:hover #k-progress::after,\n#k-track.scrubbing #k-progress::after { transform: translate(50%, -50%) scale(1); }\n#k-time { white-space: nowrap; }\n#k-controls-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n#k-controls-left { display: flex; align-items: center; gap: 15px; min-width: 0; }\n#k-controls-right { display: flex; align-items: center; gap: 15px; flex: 0 0 auto; }\n\n/* The player can be narrow because the phone is narrow, or because the chat\n   pane is open on desktop. A container query catches both. */\n@container (max-width: 560px) {\n    #k-controls { padding: 16px 10px 8px 10px; }\n    #k-controls-left, #k-controls-right { gap: 10px; }\n    #k-volume, #k-volume-value { display: none; }\n    #k-time { font-size: 11px; }\n    #k-track { padding: 12px 0; }\n    #k-controls button svg { width: 20px; height: 20px; }\n    #k-quality-btn { padding: 3px 6px; font-size: 11px; }\n    #k-update-btn, #k-ext-btn { width: 25px; height: 25px; }\n    #k-big-play { width: 58px; height: 58px; }\n    #k-big-play svg { width: 30px; height: 30px; }\n    .k-center-seek { width: 40px; height: 40px; }\n    .k-center-seek svg { width: 18px; height: 18px; }\n    #k-seek-back { left: calc(50% - 68px); }\n    #k-seek-fwd { left: calc(50% + 68px); }\n}\n@container (max-width: 380px) {\n    #k-time { font-size: 10px; }\n    #k-seek-back { left: calc(50% - 60px); }\n    #k-seek-fwd { left: calc(50% + 60px); }\n}\n#k-controls { z-index: 20; }\n#k-controls button { transition: transform .15s ease, opacity .15s ease; }\n#k-controls button:hover { transform: scale(1.15); opacity: 1; }\n#k-big-play {\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease; backdrop-filter: blur(6px);\n    -webkit-backdrop-filter: blur(6px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 16;\n}\n#k-big-play.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }\n.k-center-seek {\n    position: absolute; top: 50%; width: 48px; height: 48px; padding: 0;\n    display: flex; align-items: center; justify-content: center;\n    background: rgba(7, 7, 7, 0.72); border: 1px solid rgba(255, 255, 255, 0.18);\n    border-radius: 50%; color: #fff; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease; z-index: 16;\n}\n.k-center-seek svg { width: 22px; height: 22px; }\n.k-center-seek.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }\n.k-center-seek.visible:hover { transform: translate(-50%, -50%) scale(1.08); }\n.k-center-seek.bump { transform: translate(-50%, -50%) scale(0.88); transition-duration: .08s; }\n#k-seek-back { left: calc(50% - 88px); }\n#k-seek-fwd { left: calc(50% + 88px); }\n.k-center-seek .k-center-seek-label {\n    position: absolute; font-size: 9px; font-weight: 600; letter-spacing: 0.02em;\n    color: rgba(255, 255, 255, 0.9); pointer-events: none; margin-top: 1px;\n}\n#k-loading {\n    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;\n    background: radial-gradient(circle, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.5));\n    opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 14;\n}\n#k-loading.visible { opacity: 1; }\n.k-loading-spinner {\n    width: 54px; height: 54px; border-radius: 999px; border: 4px solid rgba(255, 255, 255, 0.18);\n    border-top-color: #53fc18; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);\n    animation: kick-unlocker-spin .8s linear infinite;\n}\n@keyframes kick-unlocker-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n#k-seek-indicator {\n    position: absolute; top: 50%; left: 50%; width: 76px; height: 76px; display: flex;\n    align-items: center; justify-content: center; border-radius: 999px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); opacity: 0; pointer-events: none;\n    transform: translate(-50%, -50%) scale(0.92); transition: opacity .15s ease, transform .15s ease; z-index: 15;\n}\n#k-seek-indicator svg { width: 40px; height: 40px; }\n#k-seek-indicator[data-direction=\"backward\"] { left: 34%; }\n#k-seek-indicator[data-direction=\"forward\"] { left: 66%; }\n#k-seek-indicator.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }\n#k-update-btn {\n    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;\n    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #fff; border-radius: 8px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n/* Sits inside Kick's own control bar, so it borrows their button classes and\n   only needs a nudge of its own. */\n#k-switch-btn[data-kick-nosub] { cursor: pointer; }\n#k-switch-btn[data-kick-nosub][data-active=\"true\"] { color: #53fc18; }\n#k-native-btn {\n    display: none; align-items: center; justify-content: center; width: 28px; height: 28px;\n    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #fff; border-radius: 8px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n#k-copy-url-btn {\n    display: inline-flex; align-items: center; gap: 5px; vertical-align: middle;\n    margin-left: 8px; padding: 3px 8px; border-radius: 7px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);\n    color: rgba(255, 255, 255, 0.75); font-family: Inter, sans-serif; font-size: 11px;\n    font-weight: 500; line-height: 1.4; white-space: nowrap; cursor: pointer;\n    transition: background .15s ease, color .15s ease;\n}\n#k-copy-url-btn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }\n#k-copy-url-btn[data-state=\"done\"] { color: #53fc18; border-color: rgba(83, 252, 24, 0.4); }\n#k-copy-url-btn[data-state=\"error\"] { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.4); }\n#k-copy-url-btn svg { width: 13px; height: 13px; flex: 0 0 auto; }\n#k-toast {\n    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);\n    z-index: 2147483000; max-width: 90vw; padding: 10px 16px; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.88);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);\n    color: #fff; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.4;\n}\n#k-quality-wrap { position: relative; }\n#k-quality-btn {\n    background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;\n    border-radius: 8px; padding: 4px 8px; font-size: 12px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n#k-quality-menu {\n    position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 92px; max-height: 180px;\n    overflow-y: auto; display: none; flex-direction: column; padding: 6px 0; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 30;\n}\n#k-quality-wrap.open #k-quality-menu { display: flex; }\n#k-quality-menu .k-quality-option {\n    width: 100%; background: transparent; border: 0; color: #fff; border-radius: 0; padding: 7px 12px;\n    font-size: 12px; cursor: pointer; text-align: left; transition: none; opacity: 1;\n}\n#k-quality-menu .k-quality-option:hover { transform: none; opacity: 1; background: rgba(255, 255, 255, 0.08); }\n#k-quality-menu .k-quality-option.active { background: rgba(83, 252, 24, 0.08); color: #53fc18; }\n.k-ext-wrap { position: relative; display: inline-flex; }\n#k-ext-btn {\n    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;\n    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #fff; border-radius: 8px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n.k-ext-menu {\n    position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 190px; max-height: 240px;\n    overflow-y: auto; display: none; flex-direction: column; padding: 6px 0; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 40;\n    font-family: Inter, sans-serif; text-align: left;\n}\n.k-ext-wrap.open .k-ext-menu { display: flex; }\n.k-ext-menu .k-ext-heading {\n    padding: 6px 12px 4px 12px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;\n    color: rgba(255, 255, 255, 0.45);\n}\n.k-ext-menu .k-ext-option {\n    width: 100%; background: transparent; border: 0; color: #fff; border-radius: 0; padding: 7px 12px;\n    font-size: 12px; font-weight: 400; cursor: pointer; text-align: left; transition: none;\n    opacity: 1; white-space: nowrap;\n}\n.k-ext-menu .k-ext-option:hover { transform: none; opacity: 1; background: rgba(255, 255, 255, 0.08); }\n.k-ext-menu .k-ext-option.done { color: #53fc18; }\n#k-time { min-width: 90px; text-align: center; }\n#k-volume-wrap { display: inline-flex; align-items: center; gap: 5px; }\n#k-volume-btn {\n    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;\n    padding: 0; background: none; border: 0; color: #fff; cursor: pointer; opacity: 0.9;\n}\n#k-volume-btn svg { width: 18px; height: 18px; }\n#k-volume {\n    --k-volume-percent: 100%; width: 96px; height: 8px; padding: 0; border: 0; border-radius: 999px;\n    background: linear-gradient(90deg, #53fc18 0%, #53fc18 var(--k-volume-percent),\n        rgba(7, 7, 7, 0.72) var(--k-volume-percent), rgba(7, 7, 7, 0.72) 100%);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    appearance: none; -webkit-appearance: none; cursor: pointer; overflow: hidden;\n}\n#k-volume::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: transparent; }\n#k-volume::-webkit-slider-thumb {\n    -webkit-appearance: none; appearance: none; width: 0; height: 0; margin-top: 4px;\n    border: 0; border-radius: 0; background: transparent; box-shadow: none;\n}\n#k-volume::-moz-range-track { height: 8px; border-radius: 999px; background: rgba(7, 7, 7, 0.72); }\n#k-volume::-moz-range-progress { height: 8px; border-radius: 999px; background: #53fc18; }\n#k-volume::-moz-range-thumb { width: 0; height: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }\n#k-volume-value { min-width: 34px; color: #ddd; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }\n\n/* Download button on each video thumbnail, revealed on hover.\n   Was injected by KickVideoDownloader through its own <style> tag; it now\n   goes through the same GM_addStyle blob as the rest. */\n.k-thumb-dl-btn {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  z-index: 10;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  font-size: 18px;\n  color: #fff;\n  background: rgba(0, 0, 0, 0.7);\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  opacity: 0;\n  transition: opacity 0.15s ease-out, background 0.15s ease-out;\n}\na:hover > .k-thumb-dl-btn,\n.k-thumb-dl-btn:focus-visible {\n  opacity: 1;\n}\n.k-thumb-dl-btn:hover {\n  background: rgba(0, 0, 0, 0.9);\n}\n";
-	var ICONS = {
-		play: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M8 5v14l11-7z"/></svg>`,
-		pause: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-		external: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
-		maximize: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`,
-		settings: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
-		update: `<svg width="98" height="96" viewBox="0 0 98 96" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;"><g clip-path="url(#clip0_730_27136)"><path d="M41.4395 69.3848C28.8066 67.8535 19.9062 58.7617 19.9062 46.9902C19.9062 42.2051 21.6289 37.0371 24.5 33.5918C23.2559 30.4336 23.4473 23.7344 24.8828 20.959C28.7109 20.4805 33.8789 22.4902 36.9414 25.2656C40.5781 24.1172 44.4062 23.543 49.0957 23.543C53.7852 23.543 57.6133 24.1172 61.0586 25.1699C64.0254 22.4902 69.2891 20.4805 73.1172 20.959C74.457 23.543 74.6484 30.2422 73.4043 33.4961C76.4668 37.1328 78.0937 42.0137 78.0937 46.9902C78.0937 58.7617 69.1934 67.6621 56.3691 69.2891C59.623 71.3945 61.8242 75.9883 61.8242 81.252L61.8242 91.2051C61.8242 94.0762 64.2168 95.7031 67.0879 94.5547C84.4102 87.9512 98 70.6289 98 49.1914C98 22.1074 75.9883 6.69539e-07 48.9043 4.309e-07C21.8203 1.92261e-07 -1.9479e-07 22.1074 -4.3343e-07 49.1914C-6.20631e-07 70.4375 13.4941 88.0469 31.6777 94.6504C34.2617 95.6074 36.75 93.8848 36.75 91.3008L36.75 83.6445C35.4102 84.2188 33.6875 84.6016 32.1562 84.6016C25.8398 84.6016 22.1074 81.1563 19.4277 74.7441C18.375 72.1602 17.2266 70.6289 15.0254 70.3418C13.877 70.2461 13.4941 69.7676 13.4941 69.1934C13.4941 68.0449 15.4082 67.1836 17.3223 67.1836C20.0977 67.1836 22.4902 68.9063 24.9785 72.4473C26.8926 75.2227 28.9023 76.4668 31.2949 76.4668C33.6875 76.4668 35.2187 75.6055 37.4199 73.4043C39.0469 71.7773 40.291 70.3418 41.4395 69.3848Z" fill="white"/></g><defs><clipPath id="clip0_730_27136"><rect width="98" height="96" fill="white"/></clipPath></defs></svg>`,
-		bigPlay: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:40px;height:40px;"><path fill="none" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>`,
-		swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>`,
-		bigPause: `<svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-		backward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 12 18z"/><path d="M22 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 22 18z"/></svg>`,
-		forward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z"/><path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z"/></svg>`,
-		volumeHigh: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6m3.364 3.364a9 9 0 0 0 0-12.728"/></svg>`,
-		volumeMedium: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6"/></svg>`,
-		volumeLow: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/></svg>`,
-		volumeMute: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM22 9l-6 6m0-6l6 6"/></svg>`
-	};
 	var SUBSCRIBER_ONLY_SELECTOR = "[data-testid=\"video-subscriber-only\"]";
 	var CONTROL_ANCHOR_SELECTOR = "[data-testid=\"video-player-clip\"]";
 	var BADGE_SELECTOR = "svg[data-ds-icon=\"VerifiedBadge\"]";
@@ -76,6 +60,14 @@
 	var DOWNLOAD_BUTTON_ID = "k-download-btn";
 	var THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
 	var THUMB_INJECTED_FLAG = "kDlInjected";
+	var state = {
+		activeHls: null,
+		activeChatController: null,
+		nativeExternalCache: null,
+		isUnlocking: false,
+		activePlayerUi: null,
+		autoSwitchTimer: null
+	};
 	function gmFetch(url, opts = {}) {
 		return new Promise((resolve, reject) => {
 			GM_xmlhttpRequest({
@@ -105,124 +97,6 @@
 				ontimeout: () => resolve(null)
 			});
 		});
-	}
-	function legacyKeyFor(key) {
-		return key.startsWith("kick_extended_") ? LEGACY_STORAGE_PREFIX + key.slice(STORAGE_PREFIX.length) : key;
-	}
-	function readMigrated(key) {
-		const current = localStorage.getItem(key);
-		if (current !== null) return current;
-		const legacyKey = legacyKeyFor(key);
-		if (legacyKey === key) return null;
-		const legacyValue = localStorage.getItem(legacyKey);
-		if (legacyValue === null) return null;
-		localStorage.setItem(key, legacyValue);
-		localStorage.removeItem(legacyKey);
-		return legacyValue;
-	}
-	function removeBoth(key) {
-		localStorage.removeItem(key);
-		localStorage.removeItem(legacyKeyFor(key));
-	}
-	function getResumeKey(channelSlug, videoSlug) {
-		return `${STORAGE_PREFIX}resume:${channelSlug}:${videoSlug}`;
-	}
-	function getPlayerSettingsKey(channelSlug, videoSlug) {
-		return `${STORAGE_PREFIX}settings:${channelSlug}:${videoSlug}`;
-	}
-	function loadPlayerSettings(settingsKey) {
-		try {
-			const raw = readMigrated(settingsKey);
-			return raw ? JSON.parse(raw) : {};
-		} catch (e) {
-			return {};
-		}
-	}
-	function savePlayerSettings(settingsKey, partialSettings) {
-		const currentSettings = loadPlayerSettings(settingsKey);
-		localStorage.setItem(settingsKey, JSON.stringify({
-			...currentSettings,
-			...partialSettings
-		}));
-	}
-	function readResumeTime(resumeKey) {
-		return readMigrated(resumeKey);
-	}
-	function saveResumeTime(resumeKey, currentTime) {
-		localStorage.setItem(resumeKey, currentTime);
-	}
-	function clearResumeTime(resumeKey) {
-		removeBoth(resumeKey);
-	}
-	function getPreferCustom() {
-		return readMigrated(AUTO_CUSTOM_KEY) === "1";
-	}
-	function setPreferCustom() {
-		localStorage.setItem(AUTO_CUSTOM_KEY, "1");
-	}
-	function clearPreferCustom() {
-		removeBoth(AUTO_CUSTOM_KEY);
-	}
-	function normalizeVersion(version) {
-		return String(version || "").trim().replace(/^v/i, "").split(/[^0-9]+/).filter(Boolean).map((part) => parseInt(part, 10));
-	}
-	function isVersionGreater(candidateVersion, currentVersion) {
-		const candidateParts = normalizeVersion(candidateVersion);
-		const currentParts = normalizeVersion(currentVersion);
-		const maxLength = Math.max(candidateParts.length, currentParts.length);
-		for (let index = 0; index < maxLength; index++) {
-			const candidate = candidateParts[index] || 0;
-			const current = currentParts[index] || 0;
-			if (candidate > current) return true;
-			if (candidate < current) return false;
-		}
-		return false;
-	}
-	function formatTime(seconds) {
-		if (!isFinite(seconds) || seconds < 0) return "0:00";
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor(seconds % 3600 / 60);
-		const s = Math.floor(seconds % 60);
-		if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-		else return `${m}:${s.toString().padStart(2, "0")}`;
-	}
-	function getVolumeIcon(volume) {
-		if (volume <= 0) return ICONS.volumeMute;
-		if (volume < .2) return ICONS.volumeLow;
-		if (volume < .5) return ICONS.volumeMedium;
-		return ICONS.volumeHigh;
-	}
-	function showToast(message, duration = 5e3) {
-		document.querySelector("#k-toast")?.remove();
-		const toast = document.createElement("div");
-		toast.id = "k-toast";
-		toast.textContent = message;
-		document.body.appendChild(toast);
-		setTimeout(() => toast.remove(), duration);
-	}
-	var latestReleasePromise = null;
-	async function getLatestReleaseAsync() {
-		try {
-			const response = await gmFetch("https://api.github.com/repos/Enmn/KickNoSub/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
-			if (!response.ok) return null;
-			const data = response.json();
-			return {
-				tagName: data.tag_name,
-				htmlUrl: data.html_url,
-				name: data.name
-			};
-		} catch (e) {
-			return null;
-		}
-	}
-	function getLatestReleaseInfo() {
-		if (latestReleasePromise) return latestReleasePromise;
-		latestReleasePromise = getLatestReleaseAsync().then((release) => {
-			const currentVersion = GM_info.script.version;
-			if (release?.tagName && release?.htmlUrl && isVersionGreater(release.tagName, currentVersion)) return release;
-			return null;
-		}).catch(() => null);
-		return latestReleasePromise;
 	}
 	async function getVideoMetadata(channelSlug, videoSlug) {
 		try {
@@ -306,6 +180,87 @@
 		} catch (e) {
 			return null;
 		}
+	}
+	function isVodPage() {
+		return VOD_PATH_REGEX.test(window.location.pathname);
+	}
+	function getNativeVideo() {
+		const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
+		if (byId && byId.id !== "k-video") return byId;
+		return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
+	}
+	function isNativePlayerReady() {
+		const nativeVideo = getNativeVideo();
+		if (!nativeVideo) return false;
+		const rect = nativeVideo.getBoundingClientRect();
+		if (rect.width < 120 || rect.height < 70) return false;
+		return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
+	}
+	function findCopyButtonAnchor() {
+		const badge = document.querySelector(BADGE_SELECTOR);
+		if (badge?.parentElement) return badge;
+		return document.querySelector(CHANNEL_NAME_SELECTOR);
+	}
+	function findNativePlayerContainer() {
+		const nativeVideo = getNativeVideo();
+		if (!nativeVideo) return null;
+		const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
+		if (classMatch) return classMatch;
+		const videoRect = nativeVideo.getBoundingClientRect();
+		let node = nativeVideo.parentElement;
+		let bestMatch = nativeVideo.parentElement;
+		while (node && node !== document.body) {
+			const rect = node.getBoundingClientRect();
+			if (rect.width > videoRect.width * 1.15 || rect.height > videoRect.height * 1.3) break;
+			bestMatch = node;
+			node = node.parentElement;
+		}
+		return bestMatch;
+	}
+	function ensureCopyUrlButton() {
+		if (!isVodPage()) return;
+		if (document.querySelector("#k-copy-url-btn")) return;
+		const anchor = findCopyButtonAnchor();
+		if (!anchor?.parentElement) return;
+		const button = document.createElement("button");
+		button.id = "k-copy-url-btn";
+		button.type = "button";
+		button.title = "Copy stream URL (.m3u8)";
+		const defaultLabel = "Copy stream URL";
+		button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${defaultLabel}</span>`;
+		const setLabel = (text, state) => {
+			button.querySelector("span").textContent = text;
+			if (state) button.dataset.state = state;
+			else delete button.dataset.state;
+		};
+		button.addEventListener("click", async (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (button.dataset.busy === "1") return;
+			const pathParts = window.location.pathname.split("/").filter(Boolean);
+			const channelSlug = pathParts[0];
+			const videoSlug = pathParts[2];
+			const cacheKey = `${channelSlug}/${videoSlug}`;
+			if (state.nativeExternalCache?.key !== cacheKey) {
+				button.dataset.busy = "1";
+				setLabel("Loading...", null);
+				const resolved = await resolveStream(channelSlug, videoSlug);
+				delete button.dataset.busy;
+				if (!resolved) {
+					setLabel("Stream not found", "error");
+					setTimeout(() => setLabel(defaultLabel, null), 2500);
+					return;
+				}
+				state.nativeExternalCache = {
+					key: cacheKey,
+					...resolved
+				};
+			}
+			GM_setClipboard(state.nativeExternalCache.streamUrl, "text");
+			setLabel("Copied", "done");
+			setTimeout(() => setLabel(defaultLabel, null), 1600);
+		});
+		anchor.parentElement.insertBefore(button, anchor.nextSibling);
 	}
 	var ChatController = class {
 		constructor(channelId, videoStartTime, container) {
@@ -405,49 +360,85 @@
 			this.lastRenderedMsgId = lastM.id;
 		}
 	};
-	var state = {
-		activeHls: null,
-		activeChatController: null,
-		nativeExternalCache: null,
-		isUnlocking: false,
-		activePlayerUi: null,
-		autoSwitchTimer: null
-	};
-	function isVodPage() {
-		return VOD_PATH_REGEX.test(window.location.pathname);
+	function legacyKeyFor(key) {
+		return key.startsWith("kick_extended_") ? LEGACY_STORAGE_PREFIX + key.slice(STORAGE_PREFIX.length) : key;
 	}
-	function getNativeVideo() {
-		const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
-		if (byId && byId.id !== "k-video") return byId;
-		return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
+	function readMigrated(key) {
+		const current = localStorage.getItem(key);
+		if (current !== null) return current;
+		const legacyKey = legacyKeyFor(key);
+		if (legacyKey === key) return null;
+		const legacyValue = localStorage.getItem(legacyKey);
+		if (legacyValue === null) return null;
+		localStorage.setItem(key, legacyValue);
+		localStorage.removeItem(legacyKey);
+		return legacyValue;
 	}
-	function isNativePlayerReady() {
-		const nativeVideo = getNativeVideo();
-		if (!nativeVideo) return false;
-		const rect = nativeVideo.getBoundingClientRect();
-		if (rect.width < 120 || rect.height < 70) return false;
-		return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
+	function removeBoth(key) {
+		localStorage.removeItem(key);
+		localStorage.removeItem(legacyKeyFor(key));
 	}
-	function findCopyButtonAnchor() {
-		const badge = document.querySelector(BADGE_SELECTOR);
-		if (badge?.parentElement) return badge;
-		return document.querySelector(CHANNEL_NAME_SELECTOR);
+	function getResumeKey(channelSlug, videoSlug) {
+		return `${STORAGE_PREFIX}resume:${channelSlug}:${videoSlug}`;
 	}
-	function findNativePlayerContainer() {
-		const nativeVideo = getNativeVideo();
-		if (!nativeVideo) return null;
-		const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
-		if (classMatch) return classMatch;
-		const videoRect = nativeVideo.getBoundingClientRect();
-		let node = nativeVideo.parentElement;
-		let bestMatch = nativeVideo.parentElement;
-		while (node && node !== document.body) {
-			const rect = node.getBoundingClientRect();
-			if (rect.width > videoRect.width * 1.15 || rect.height > videoRect.height * 1.3) break;
-			bestMatch = node;
-			node = node.parentElement;
+	function getPlayerSettingsKey(channelSlug, videoSlug) {
+		return `${STORAGE_PREFIX}settings:${channelSlug}:${videoSlug}`;
+	}
+	function loadPlayerSettings(settingsKey) {
+		try {
+			const raw = readMigrated(settingsKey);
+			return raw ? JSON.parse(raw) : {};
+		} catch (e) {
+			return {};
 		}
-		return bestMatch;
+	}
+	function savePlayerSettings(settingsKey, partialSettings) {
+		const currentSettings = loadPlayerSettings(settingsKey);
+		localStorage.setItem(settingsKey, JSON.stringify({
+			...currentSettings,
+			...partialSettings
+		}));
+	}
+	function readResumeTime(resumeKey) {
+		return readMigrated(resumeKey);
+	}
+	function saveResumeTime(resumeKey, currentTime) {
+		localStorage.setItem(resumeKey, currentTime);
+	}
+	function clearResumeTime(resumeKey) {
+		removeBoth(resumeKey);
+	}
+	function getPreferCustom() {
+		return readMigrated(AUTO_CUSTOM_KEY) === "1";
+	}
+	function setPreferCustom() {
+		localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+	}
+	function clearPreferCustom() {
+		removeBoth(AUTO_CUSTOM_KEY);
+	}
+	function normalizeVersion(version) {
+		return String(version || "").trim().replace(/^v/i, "").split(/[^0-9]+/).filter(Boolean).map((part) => parseInt(part, 10));
+	}
+	function isVersionGreater(candidateVersion, currentVersion) {
+		const candidateParts = normalizeVersion(candidateVersion);
+		const currentParts = normalizeVersion(currentVersion);
+		const maxLength = Math.max(candidateParts.length, currentParts.length);
+		for (let index = 0; index < maxLength; index++) {
+			const candidate = candidateParts[index] || 0;
+			const current = currentParts[index] || 0;
+			if (candidate > current) return true;
+			if (candidate < current) return false;
+		}
+		return false;
+	}
+	function showToast(message, duration = 5e3) {
+		document.querySelector("#k-toast")?.remove();
+		const toast = document.createElement("div");
+		toast.id = "k-toast";
+		toast.textContent = message;
+		document.body.appendChild(toast);
+		setTimeout(() => toast.remove(), duration);
 	}
 	function stopNativePlayback(scope) {
 		(scope || document).querySelectorAll("video").forEach((videoElement) => {
@@ -458,6 +449,61 @@
 				videoElement.load();
 			} catch (e) {}
 		});
+	}
+	var ICONS = {
+		play: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M8 5v14l11-7z"/></svg>`,
+		pause: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
+		external: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
+		maximize: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`,
+		settings: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
+		update: `<svg width="98" height="96" viewBox="0 0 98 96" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;"><g clip-path="url(#clip0_730_27136)"><path d="M41.4395 69.3848C28.8066 67.8535 19.9062 58.7617 19.9062 46.9902C19.9062 42.2051 21.6289 37.0371 24.5 33.5918C23.2559 30.4336 23.4473 23.7344 24.8828 20.959C28.7109 20.4805 33.8789 22.4902 36.9414 25.2656C40.5781 24.1172 44.4062 23.543 49.0957 23.543C53.7852 23.543 57.6133 24.1172 61.0586 25.1699C64.0254 22.4902 69.2891 20.4805 73.1172 20.959C74.457 23.543 74.6484 30.2422 73.4043 33.4961C76.4668 37.1328 78.0937 42.0137 78.0937 46.9902C78.0937 58.7617 69.1934 67.6621 56.3691 69.2891C59.623 71.3945 61.8242 75.9883 61.8242 81.252L61.8242 91.2051C61.8242 94.0762 64.2168 95.7031 67.0879 94.5547C84.4102 87.9512 98 70.6289 98 49.1914C98 22.1074 75.9883 6.69539e-07 48.9043 4.309e-07C21.8203 1.92261e-07 -1.9479e-07 22.1074 -4.3343e-07 49.1914C-6.20631e-07 70.4375 13.4941 88.0469 31.6777 94.6504C34.2617 95.6074 36.75 93.8848 36.75 91.3008L36.75 83.6445C35.4102 84.2188 33.6875 84.6016 32.1562 84.6016C25.8398 84.6016 22.1074 81.1563 19.4277 74.7441C18.375 72.1602 17.2266 70.6289 15.0254 70.3418C13.877 70.2461 13.4941 69.7676 13.4941 69.1934C13.4941 68.0449 15.4082 67.1836 17.3223 67.1836C20.0977 67.1836 22.4902 68.9063 24.9785 72.4473C26.8926 75.2227 28.9023 76.4668 31.2949 76.4668C33.6875 76.4668 35.2187 75.6055 37.4199 73.4043C39.0469 71.7773 40.291 70.3418 41.4395 69.3848Z" fill="white"/></g><defs><clipPath id="clip0_730_27136"><rect width="98" height="96" fill="white"/></clipPath></defs></svg>`,
+		bigPlay: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:40px;height:40px;"><path fill="none" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>`,
+		swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>`,
+		bigPause: `<svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
+		backward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 12 18z"/><path d="M22 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 22 18z"/></svg>`,
+		forward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z"/><path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z"/></svg>`,
+		volumeHigh: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6m3.364 3.364a9 9 0 0 0 0-12.728"/></svg>`,
+		volumeMedium: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6"/></svg>`,
+		volumeLow: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/></svg>`,
+		volumeMute: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM22 9l-6 6m0-6l6 6"/></svg>`
+	};
+	function formatTime(seconds) {
+		if (!isFinite(seconds) || seconds < 0) return "0:00";
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor(seconds % 3600 / 60);
+		const s = Math.floor(seconds % 60);
+		if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+		else return `${m}:${s.toString().padStart(2, "0")}`;
+	}
+	function getVolumeIcon(volume) {
+		if (volume <= 0) return ICONS.volumeMute;
+		if (volume < .2) return ICONS.volumeLow;
+		if (volume < .5) return ICONS.volumeMedium;
+		return ICONS.volumeHigh;
+	}
+	var latestReleasePromise = null;
+	async function getLatestReleaseAsync() {
+		try {
+			const response = await gmFetch("https://api.github.com/repos/Enmn/KickNoSub/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
+			if (!response.ok) return null;
+			const data = response.json();
+			return {
+				tagName: data.tag_name,
+				htmlUrl: data.html_url,
+				name: data.name
+			};
+		} catch (e) {
+			return null;
+		}
+	}
+	function getLatestReleaseInfo() {
+		if (latestReleasePromise) return latestReleasePromise;
+		latestReleasePromise = getLatestReleaseAsync().then((release) => {
+			const currentVersion = GM_info.script.version;
+			if (release?.tagName && release?.htmlUrl && isVersionGreater(release.tagName, currentVersion)) return release;
+			return null;
+		}).catch(() => null);
+		return latestReleasePromise;
 	}
 	function makeVideoTitle(result) {
 		return (result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
@@ -553,51 +599,6 @@
 			menuElement.appendChild(option);
 		});
 	}
-	function ensureCopyUrlButton() {
-		if (!isVodPage()) return;
-		if (document.querySelector("#k-copy-url-btn")) return;
-		const anchor = findCopyButtonAnchor();
-		if (!anchor?.parentElement) return;
-		const button = document.createElement("button");
-		button.id = "k-copy-url-btn";
-		button.type = "button";
-		button.title = "Copy stream URL (.m3u8)";
-		const defaultLabel = "Copy stream URL";
-		button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>${defaultLabel}</span>`;
-		const setLabel = (text, state) => {
-			button.querySelector("span").textContent = text;
-			if (state) button.dataset.state = state;
-			else delete button.dataset.state;
-		};
-		button.addEventListener("click", async (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			if (button.dataset.busy === "1") return;
-			const pathParts = window.location.pathname.split("/").filter(Boolean);
-			const channelSlug = pathParts[0];
-			const videoSlug = pathParts[2];
-			const cacheKey = `${channelSlug}/${videoSlug}`;
-			if (state.nativeExternalCache?.key !== cacheKey) {
-				button.dataset.busy = "1";
-				setLabel("Loading...", null);
-				const resolved = await resolveStream(channelSlug, videoSlug);
-				delete button.dataset.busy;
-				if (!resolved) {
-					setLabel("Stream not found", "error");
-					setTimeout(() => setLabel(defaultLabel, null), 2500);
-					return;
-				}
-				state.nativeExternalCache = {
-					key: cacheKey,
-					...resolved
-				};
-			}
-			GM_setClipboard(state.nativeExternalCache.streamUrl, "text");
-			setLabel("Copied", "done");
-			setTimeout(() => setLabel(defaultLabel, null), 1600);
-		});
-		anchor.parentElement.insertBefore(button, anchor.nextSibling);
-	}
 	var globalPlayerListenersBound = false;
 	function bindGlobalPlayerListeners() {
 		if (globalPlayerListenersBound) return;
@@ -668,151 +669,7 @@
 		}, true);
 		globalPlayerListenersBound = true;
 	}
-	function buildSplashMarkup(fallbackMinHeight) {
-		return `
-            <div style="width:100%;height:100%;min-height:${fallbackMinHeight}px;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
-                <div style="font-size:18px;color:rgba(255,255,255,0.7);">Loading stream...</div>
-            </div>
-        `;
-	}
-	function buildStreamNotFoundMarkup() {
-		return `
-              <div style="width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
-                  <div style="font-size:20px;color:rgba(255,255,255,0.7);font-weight:bold;">Stream Not Found</div>
-              </div>`;
-	}
-	function buildChatShellMarkup() {
-		return `<div style="display:flex;width:100%;height:100%;"><div id="unlocker-video-area" style="flex:1;background:#000;position:relative;"></div><div id="unlocker-chat-area" style="width:320px;height:100%;border-left:1px solid #333;"></div></div>`;
-	}
-	function buildPlayerMarkup() {
-		return `
-            <div id="k-player" style="width:100%;height:100%;position:relative;background:black;overflow:hidden;font-family:Inter,sans-serif;">
-                <video id="k-video" playsinline style="width:100%;height:100%;object-fit:contain;"></video>
-                <div id="k-loading" class="visible" aria-hidden="true">
-                    <div class="k-loading-spinner"></div>
-                </div>
-                <div id="k-controls" style="position:absolute;bottom:0;left:0;width:100%;padding:20px 15px 10px 15px;background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);display:flex;flex-direction:column;opacity:0;transition:opacity 0.2s;">
-                    <div id="k-track" style="width:100%;height:5px;padding:8px 0;background:rgba(255,255,255,0.3);background-clip:content-box;box-sizing:content-box;cursor:pointer;position:relative;margin-bottom:4px;border-radius:2px;">
-                        <div id="k-track-tooltip">
-                            <div id="k-track-tooltip-time">0:00</div>
-                        </div>
-                         <div id="k-progress" style="width:0%;height:100%;background:#53fc18;position:relative;border-radius:2px;"></div>
-                    </div>
-                    <div id="k-controls-row">
-                        <div id="k-controls-left">
-                            <button id="k-play" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.play}</button>
-                            <span id="k-time" style="font-size:13px;color:#ddd;font-variant-numeric:tabular-nums;">0:00 / 0:00</span>
-                            <div id="k-volume-wrap">
-                                <button id="k-volume-btn" type="button" aria-label="Mute volume">${ICONS.volumeHigh}</button>
-                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1">
-                                <span id="k-volume-value">100%</span>
-                            </div>
-                        </div>
-                        <div id="k-controls-right">
-                            <button id="k-update-btn" type="button" title="Open latest update" style="display:none;">${ICONS.update}</button>
-                            <button id="k-native-btn" type="button" title="Kembali ke player Kick">${ICONS.swap}</button>
-                            <div id="k-ext-wrap" class="k-ext-wrap">
-                                <button id="k-ext-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
-                                <div id="k-ext-menu" class="k-ext-menu"></div>
-                            </div>
-                            <div id="k-quality-wrap">
-                                <button id="k-quality-btn" type="button">Auto ▴</button>
-                                <div id="k-quality-menu"></div>
-                            </div>
-                            <button id="k-fs" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.maximize}</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="k-seek-indicator" aria-hidden="true"></div>
-                <button id="k-seek-back" class="k-center-seek" type="button" title="Mundur 10 detik" aria-label="Mundur 10 detik">
-                    ${ICONS.backward}<span class="k-center-seek-label">10</span>
-                </button>
-                <button id="k-big-play" style="position:absolute;top:50%;left:50%;width:70px;height:70px;background:rgba(7,7,7,0.72);border-radius:50%;border:1px solid rgba(255,255,255,0.18);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                    ${ICONS.bigPlay}
-                </button>
-                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Maju 10 detik" aria-label="Maju 10 detik">
-                    ${ICONS.forward}<span class="k-center-seek-label">10</span>
-                </button>
-            </div>
-        `;
-	}
-	function setupPlayback({ vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState }, { finalUrl, resumeKey, playerSettingsKey, savedPlayerSettings }) {
-		if (hls_js.default.isSupported()) {
-			const hls = new hls_js.default({
-				debug: false,
-				enableWorker: false,
-				lowLatencyMode: true
-			});
-			state.activeHls = hls;
-			hls.loadSource(finalUrl);
-			hls.attachMedia(vid);
-			hls.on(hls_js.default.Events.MANIFEST_LOADING, () => setLoadingState(true, { immediate: true }));
-			hls.on(hls_js.default.Events.MANIFEST_PARSED, () => {
-				setLoadingState(false);
-				const setQuality = (level, label, optionRef = null, qualitySettings = null) => {
-					hls.currentLevel = level;
-					qualBtn.textContent = `${label} ▴`;
-					[...qualMenu.querySelectorAll(".k-quality-option")].forEach((option) => option.classList.remove("active"));
-					if (optionRef) optionRef.classList.add("active");
-					if (qualitySettings) savePlayerSettings(playerSettingsKey, { quality: qualitySettings });
-					qualWrap.classList.remove("open");
-				};
-				const addQualityItem = (level, label, qualitySettings, isActive = false) => {
-					const item = document.createElement("button");
-					item.type = "button";
-					item.className = "k-quality-option";
-					item.textContent = label;
-					if (isActive) item.classList.add("active");
-					item.addEventListener("click", (e) => {
-						e.stopPropagation();
-						setQuality(level, label, item, qualitySettings);
-					});
-					qualMenu.appendChild(item);
-					return item;
-				};
-				const qualityItems = [];
-				const autoItem = addQualityItem(-1, "Auto", { mode: "auto" }, true);
-				hls.levels.map((lvl, idx) => ({
-					lvl,
-					idx
-				})).sort((a, b) => (b.lvl.height || 0) - (a.lvl.height || 0)).forEach(({ lvl, idx }) => {
-					qualityItems.push({
-						height: lvl.height,
-						level: idx,
-						label: `${lvl.height}p`,
-						element: addQualityItem(idx, `${lvl.height}p`, {
-							mode: "manual",
-							height: lvl.height
-						})
-					});
-				});
-				const savedQuality = savedPlayerSettings.quality;
-				if (savedQuality?.mode === "manual") {
-					const matchedQuality = qualityItems.find((item) => item.height === savedQuality.height);
-					if (matchedQuality) setQuality(matchedQuality.level, matchedQuality.label, matchedQuality.element, {
-						mode: "manual",
-						height: matchedQuality.height
-					});
-					else setQuality(-1, "Auto", autoItem, { mode: "auto" });
-				} else setQuality(-1, "Auto", autoItem, { mode: "auto" });
-				vid.play().catch(() => btnBig.classList.add("visible"));
-			});
-			const savedTime = parseFloat(readResumeTime(resumeKey));
-			if (Number.isFinite(savedTime) && savedTime > 1) vid.addEventListener("loadedmetadata", () => {
-				if (Number.isFinite(vid.duration)) vid.currentTime = Math.min(savedTime, vid.duration - 1);
-				else vid.currentTime = savedTime;
-			}, { once: true });
-			hls.on(hls_js.default.Events.ERROR, (e, data) => {
-				if (data.fatal) setLoadingState(false);
-				if (data.fatal) {
-					if (data.type === hls_js.default.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-					else if (data.type === hls_js.default.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-					else hls.destroy();
-				}
-			});
-		} else if (vid.canPlayType("application/vnd.apple.mpegurl")) vid.src = finalUrl;
-	}
-	function createControls({ videoParent, manualSwitch, resumeKey, playerSettingsKey, savedPlayerSettings, streamUrl, result, chatController, finalUrl }) {
+	function createControls({ videoParent, manualSwitch, resumeKey, playerSettingsKey, savedPlayerSettings, streamUrl, result, chatController }) {
 		const pRoot = videoParent.querySelector("#k-player");
 		const vid = videoParent.querySelector("#k-video");
 		const controls = videoParent.querySelector("#k-controls");
@@ -1179,13 +1036,157 @@
 			setLoadingState
 		};
 	}
+	function buildSplashMarkup(fallbackMinHeight) {
+		return `
+            <div style="width:100%;height:100%;min-height:${fallbackMinHeight}px;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
+                <div style="font-size:18px;color:rgba(255,255,255,0.7);">Loading stream...</div>
+            </div>
+        `;
+	}
+	function buildStreamNotFoundMarkup() {
+		return `
+              <div style="width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
+                  <div style="font-size:20px;color:rgba(255,255,255,0.7);font-weight:bold;">Stream Not Found</div>
+              </div>`;
+	}
+	function buildChatShellMarkup() {
+		return `<div style="display:flex;width:100%;height:100%;"><div id="unlocker-video-area" style="flex:1;background:#000;position:relative;"></div><div id="unlocker-chat-area" style="width:320px;height:100%;border-left:1px solid #333;"></div></div>`;
+	}
+	function buildPlayerMarkup() {
+		return `
+            <div id="k-player" style="width:100%;height:100%;position:relative;background:black;overflow:hidden;font-family:Inter,sans-serif;">
+                <video id="k-video" playsinline style="width:100%;height:100%;object-fit:contain;"></video>
+                <div id="k-loading" class="visible" aria-hidden="true">
+                    <div class="k-loading-spinner"></div>
+                </div>
+                <div id="k-controls" style="position:absolute;bottom:0;left:0;width:100%;padding:20px 15px 10px 15px;background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);display:flex;flex-direction:column;opacity:0;transition:opacity 0.2s;">
+                    <div id="k-track" style="width:100%;height:5px;padding:8px 0;background:rgba(255,255,255,0.3);background-clip:content-box;box-sizing:content-box;cursor:pointer;position:relative;margin-bottom:4px;border-radius:2px;">
+                        <div id="k-track-tooltip">
+                            <div id="k-track-tooltip-time">0:00</div>
+                        </div>
+                         <div id="k-progress" style="width:0%;height:100%;background:#53fc18;position:relative;border-radius:2px;"></div>
+                    </div>
+                    <div id="k-controls-row">
+                        <div id="k-controls-left">
+                            <button id="k-play" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.play}</button>
+                            <span id="k-time" style="font-size:13px;color:#ddd;font-variant-numeric:tabular-nums;">0:00 / 0:00</span>
+                            <div id="k-volume-wrap">
+                                <button id="k-volume-btn" type="button" aria-label="Mute volume">${ICONS.volumeHigh}</button>
+                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1">
+                                <span id="k-volume-value">100%</span>
+                            </div>
+                        </div>
+                        <div id="k-controls-right">
+                            <button id="k-update-btn" type="button" title="Open latest update" style="display:none;">${ICONS.update}</button>
+                            <button id="k-native-btn" type="button" title="Kembali ke player Kick">${ICONS.swap}</button>
+                            <div id="k-ext-wrap" class="k-ext-wrap">
+                                <button id="k-ext-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
+                                <div id="k-ext-menu" class="k-ext-menu"></div>
+                            </div>
+                            <div id="k-quality-wrap">
+                                <button id="k-quality-btn" type="button">Auto ▴</button>
+                                <div id="k-quality-menu"></div>
+                            </div>
+                            <button id="k-fs" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.maximize}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="k-seek-indicator" aria-hidden="true"></div>
+                <button id="k-seek-back" class="k-center-seek" type="button" title="Mundur 10 detik" aria-label="Mundur 10 detik">
+                    ${ICONS.backward}<span class="k-center-seek-label">10</span>
+                </button>
+                <button id="k-big-play" style="position:absolute;top:50%;left:50%;width:70px;height:70px;background:rgba(7,7,7,0.72);border-radius:50%;border:1px solid rgba(255,255,255,0.18);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    ${ICONS.bigPlay}
+                </button>
+                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Maju 10 detik" aria-label="Maju 10 detik">
+                    ${ICONS.forward}<span class="k-center-seek-label">10</span>
+                </button>
+            </div>
+        `;
+	}
+	function setupPlayback({ vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState }, { finalUrl, resumeKey, playerSettingsKey, savedPlayerSettings }) {
+		if (hls_js.default.isSupported()) {
+			const hls = new hls_js.default({
+				debug: false,
+				enableWorker: false,
+				lowLatencyMode: true
+			});
+			state.activeHls = hls;
+			hls.loadSource(finalUrl);
+			hls.attachMedia(vid);
+			hls.on(hls_js.default.Events.MANIFEST_LOADING, () => setLoadingState(true, { immediate: true }));
+			hls.on(hls_js.default.Events.MANIFEST_PARSED, () => {
+				setLoadingState(false);
+				const setQuality = (level, label, optionRef = null, qualitySettings = null) => {
+					hls.currentLevel = level;
+					qualBtn.textContent = `${label} ▴`;
+					[...qualMenu.querySelectorAll(".k-quality-option")].forEach((option) => option.classList.remove("active"));
+					if (optionRef) optionRef.classList.add("active");
+					if (qualitySettings) savePlayerSettings(playerSettingsKey, { quality: qualitySettings });
+					qualWrap.classList.remove("open");
+				};
+				const addQualityItem = (level, label, qualitySettings, isActive = false) => {
+					const item = document.createElement("button");
+					item.type = "button";
+					item.className = "k-quality-option";
+					item.textContent = label;
+					if (isActive) item.classList.add("active");
+					item.addEventListener("click", (e) => {
+						e.stopPropagation();
+						setQuality(level, label, item, qualitySettings);
+					});
+					qualMenu.appendChild(item);
+					return item;
+				};
+				const qualityItems = [];
+				const autoItem = addQualityItem(-1, "Auto", { mode: "auto" }, true);
+				hls.levels.map((lvl, idx) => ({
+					lvl,
+					idx
+				})).sort((a, b) => (b.lvl.height || 0) - (a.lvl.height || 0)).forEach(({ lvl, idx }) => {
+					qualityItems.push({
+						height: lvl.height,
+						level: idx,
+						label: `${lvl.height}p`,
+						element: addQualityItem(idx, `${lvl.height}p`, {
+							mode: "manual",
+							height: lvl.height
+						})
+					});
+				});
+				const savedQuality = savedPlayerSettings.quality;
+				if (savedQuality?.mode === "manual") {
+					const matchedQuality = qualityItems.find((item) => item.height === savedQuality.height);
+					if (matchedQuality) setQuality(matchedQuality.level, matchedQuality.label, matchedQuality.element, {
+						mode: "manual",
+						height: matchedQuality.height
+					});
+					else setQuality(-1, "Auto", autoItem, { mode: "auto" });
+				} else setQuality(-1, "Auto", autoItem, { mode: "auto" });
+				vid.play().catch(() => btnBig.classList.add("visible"));
+			});
+			const savedTime = parseFloat(readResumeTime(resumeKey));
+			if (Number.isFinite(savedTime) && savedTime > 1) vid.addEventListener("loadedmetadata", () => {
+				if (Number.isFinite(vid.duration)) vid.currentTime = Math.min(savedTime, vid.duration - 1);
+				else vid.currentTime = savedTime;
+			}, { once: true });
+			hls.on(hls_js.default.Events.ERROR, (e, data) => {
+				if (data.fatal) setLoadingState(false);
+				if (data.fatal) {
+					if (data.type === hls_js.default.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+					else if (data.type === hls_js.default.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+					else hls.destroy();
+				}
+			});
+		} else if (vid.canPlayType("application/vnd.apple.mpegurl")) vid.src = finalUrl;
+	}
 	async function unlockVideo(triggerElement, options = {}) {
 		const { explicitContainer = null, manualSwitch = false } = options;
 		if (state.isUnlocking) return;
 		const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
 		if (!container || container.dataset.kickUnlockerProcessing) return;
 		const pathParts = window.location.pathname.split("/").filter(Boolean);
-		let channelSlug = pathParts[0];
+		const channelSlug = pathParts[0];
 		let videoSlug = pathParts[2];
 		if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
 		const resumeKey = getResumeKey(channelSlug, videoSlug);
@@ -1239,7 +1240,7 @@
 			chatController.init(null);
 			state.activeChatController = chatController;
 			const finalUrl = streamUrl + (streamUrl.includes("?") ? "&" : "?") + "kick_ts=" + Date.now();
-			let videoParent = existingChat ? container : container.querySelector("#unlocker-video-area");
+			const videoParent = existingChat ? container : container.querySelector("#unlocker-video-area");
 			videoParent.innerHTML = buildPlayerMarkup();
 			const { vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState } = createControls({
 				videoParent,
@@ -1249,8 +1250,7 @@
 				savedPlayerSettings,
 				streamUrl,
 				result,
-				chatController,
-				finalUrl
+				chatController
 			});
 			setupPlayback({
 				vid,

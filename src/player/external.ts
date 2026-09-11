@@ -1,6 +1,11 @@
 export function makeVideoTitle(result) {
   const raw = result?.video?.session_title || document.title || "kick-vod";
-  return raw.replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
+  return (
+    raw
+      .replace(/[\\/:*?"<>|]/g, "")
+      .trim()
+      .slice(0, 80) || "kick-vod"
+  );
 }
 
 export function launchScheme(schemeUrl) {
@@ -15,9 +20,12 @@ export function launchScheme(schemeUrl) {
 }
 
 export function downloadPlaylist(externalUrl, videoTitle) {
-  const playlist = ["#EXTM3U", `#EXTINF:-1,${videoTitle}`, externalUrl, ""].join(
-    "\n",
-  );
+  const playlist = [
+    "#EXTM3U",
+    `#EXTINF:-1,${videoTitle}`,
+    externalUrl,
+    "",
+  ].join("\n");
   const blobUrl = URL.createObjectURL(
     new Blob([playlist], { type: "audio/x-mpegurl" }),
   );

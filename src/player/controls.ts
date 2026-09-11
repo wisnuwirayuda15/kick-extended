@@ -39,7 +39,6 @@ export function createControls({
   streamUrl,
   result,
   chatController,
-  finalUrl,
 }) {
   const pRoot = videoParent.querySelector("#k-player");
   const vid = videoParent.querySelector("#k-video");
@@ -64,9 +63,7 @@ export function createControls({
   const progressBar = videoParent.querySelector("#k-progress");
   const track = videoParent.querySelector("#k-track");
   const trackTooltip = videoParent.querySelector("#k-track-tooltip");
-  const trackTooltipTime = videoParent.querySelector(
-    "#k-track-tooltip-time",
-  );
+  const trackTooltipTime = videoParent.querySelector("#k-track-tooltip-time");
   const timeDisplay = videoParent.querySelector("#k-time");
   const qualWrap = videoParent.querySelector("#k-quality-wrap");
   const extWrap = videoParent.querySelector("#k-ext-wrap");
@@ -81,9 +78,8 @@ export function createControls({
   const volumeButton = videoParent.querySelector("#k-volume-btn");
   const volumeSlider = videoParent.querySelector("#k-volume");
   const volumeValue = videoParent.querySelector("#k-volume-value");
-  const initialVolume =
-    Number.isFinite(savedPlayerSettings.volume) ?
-      savedPlayerSettings.volume
+  const initialVolume = Number.isFinite(savedPlayerSettings.volume)
+    ? savedPlayerSettings.volume
     : 1;
   let seekIndicatorTimeout = null;
   let hasStartedPlayback = false;
@@ -299,9 +295,7 @@ export function createControls({
 
   volumeButton.addEventListener("click", () => {
     if (vid.volume <= 0 || vid.muted) {
-      applyVolume(
-        previousVolumeBeforeMute > 0 ? previousVolumeBeforeMute : 1,
-      );
+      applyVolume(previousVolumeBeforeMute > 0 ? previousVolumeBeforeMute : 1);
       return;
     }
 

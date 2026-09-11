@@ -9,10 +9,12 @@ export function bindGlobalPlayerListeners() {
   if (globalPlayerListenersBound) return;
 
   document.addEventListener("click", (event) => {
-    [state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
-      if (!wrap || !wrap.isConnected) return;
-      if (!wrap.contains(event.target)) wrap.classList.remove("open");
-    });
+    [state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach(
+      (wrap) => {
+        if (!wrap || !wrap.isConnected) return;
+        if (!wrap.contains(event.target)) wrap.classList.remove("open");
+      },
+    );
   });
 
   // Player controls keep DOM focus after a click, so the keydown handler
@@ -82,8 +84,7 @@ export function bindGlobalPlayerListeners() {
         " ": () => playerUi.togglePlay(),
         k: () => playerUi.togglePlay(),
         f: () => playerUi.btnFs.click(),
-        m: () =>
-          playerUi.applyVolume(videoElement.volume === 0 ? 0.5 : 0),
+        m: () => playerUi.applyVolume(videoElement.volume === 0 ? 0.5 : 0),
         ">": () => setRate(0.25),
         ".": () => setRate(0.25),
         "<": () => setRate(-0.25),

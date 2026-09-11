@@ -36,8 +36,8 @@ export function setupPlayback(
       ) => {
         hls.currentLevel = level;
         qualBtn.textContent = `${label} ▴`;
-        [...qualMenu.querySelectorAll(".k-quality-option")].forEach(
-          (option) => option.classList.remove("active"),
+        [...qualMenu.querySelectorAll(".k-quality-option")].forEach((option) =>
+          option.classList.remove("active"),
         );
         if (optionRef) optionRef.classList.add("active");
         if (qualitySettings)

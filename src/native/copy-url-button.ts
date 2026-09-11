@@ -1,4 +1,3 @@
-import { ICONS } from "../icons.ts";
 import { resolveStream } from "../lib/kick-api.ts";
 import { state } from "../state.ts";
 import { findCopyButtonAnchor, isVodPage } from "./detect.ts";

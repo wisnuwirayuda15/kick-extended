@@ -1,70 +1,14 @@
-import Hls from "hls.js";
 import css from "./styles.css?raw";
-import { ICONS } from "./icons.ts";
 import {
-  AUTO_SWITCH_SETTLE_MS,
-  BADGE_SELECTOR,
-  CHANNEL_NAME_SELECTOR,
-  CONTROL_ANCHOR_SELECTOR,
-  KICK_CHAT_SELECTOR,
-  NATIVE_VIDEO_FALLBACK_SELECTOR,
-  NATIVE_VIDEO_SELECTOR,
-  PLAYER_CONTAINER_SELECTOR,
   SUBSCRIBER_ONLY_SELECTOR,
   SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR,
 } from "./constants.ts";
-import { checkStreamUrl, gmFetch } from "./lib/gm-fetch.ts";
-import {
-  clearPreferCustom,
-  clearResumeTime,
-  getPlayerSettingsKey,
-  getPreferCustom,
-  getResumeKey,
-  isVersionGreater,
-  loadPlayerSettings,
-  readResumeTime,
-  saveResumeTime,
-  savePlayerSettings,
-  setPreferCustom,
-} from "./lib/storage.ts";
-import { formatTime, getVolumeIcon } from "./lib/format.ts";
-import { showToast } from "./lib/toast.ts";
-import { getLatestReleaseInfo } from "./lib/update-check.ts";
-import {
-  findStreamUrlFromMetadata,
-  getVideoMetadata,
-  resolveStream,
-} from "./lib/kick-api.ts";
-import { ChatController } from "./chat/chat-controller.ts";
 import { state } from "./state.ts";
-import {
-  findCopyButtonAnchor,
-  findNativePlayerContainer,
-  getNativeVideo,
-  isNativePlayerReady,
-  isVodPage,
-} from "./native/detect.ts";
-import { stopNativePlayback } from "./native/teardown.ts";
-import {
-  buildExternalTargets,
-  makeVideoTitle,
-  populateExternalMenu,
-} from "./player/external.ts";
 import { ensureCopyUrlButton } from "./native/copy-url-button.ts";
-import { bindGlobalPlayerListeners } from "./player/shortcuts.ts";
-import {
-  buildChatShellMarkup,
-  buildPlayerMarkup,
-  buildSplashMarkup,
-  buildStreamNotFoundMarkup,
-} from "./player/markup.ts";
-import { setupPlayback } from "./player/quality.ts";
-import { createControls } from "./player/controls.ts";
 import { unlockVideo } from "./player/mount.ts";
 import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
 import { injectDownloadButton } from "./download/download-button.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
-
 
 console.log(`Kick Extended: userscript loaded (v${GM_info.script.version})`);
 
@@ -92,7 +36,8 @@ function destroyCustomPlayer() {
     state.activeChatController = null;
   }
 
-  const customVideo = state.activePlayerUi?.vid || document.querySelector("#k-video");
+  const customVideo =
+    state.activePlayerUi?.vid || document.querySelector("#k-video");
   if (customVideo) {
     try {
       customVideo.pause();
@@ -169,9 +114,7 @@ const observer = new MutationObserver(() => {
     destroyCustomPlayer();
   }
 
-  const subscriberOverlay = document.querySelector(
-    SUBSCRIBER_ONLY_SELECTOR,
-  );
+  const subscriberOverlay = document.querySelector(SUBSCRIBER_ONLY_SELECTOR);
 
   ensureCopyUrlButton();
 
@@ -199,4 +142,3 @@ const observer = new MutationObserver(() => {
 observer.observe(document.body, { childList: true, subtree: true });
 ensureCustomPlayerToggle();
 runDownloadInjections();
-

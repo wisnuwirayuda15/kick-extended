@@ -34,9 +34,7 @@ export class ChatController {
                       <br><div style="text-align:center;color:#888;">Connecting...</div>
                   </div>
               </div>`;
-      this.chatList = this.container.querySelector(
-        "#kick-unlocker-chat-list",
-      );
+      this.chatList = this.container.querySelector("#kick-unlocker-chat-list");
     }
     if (initialVideoElement) this.connectVideo(initialVideoElement);
     this.fetchLoop(this.activeSessionId);
@@ -96,7 +94,8 @@ export class ChatController {
               this.messages.push(msg);
           });
           this.messages.sort(
-            (a, b) => (new Date(a.created_at) as any) - (new Date(b.created_at) as any),
+            (a, b) =>
+              (new Date(a.created_at) as any) - (new Date(b.created_at) as any),
           );
           if (this.videoElement) this.updateUI(this.videoElement.currentTime);
         }
@@ -138,10 +137,7 @@ export class ChatController {
     if (limit === -1) return;
     const subset = this.messages.slice(Math.max(0, limit - 75), limit + 1);
     const lastM = subset[subset.length - 1];
-    if (
-      !lastM ||
-      (this.lastRenderedMsgId === lastM.id && subset.length >= 50)
-    )
+    if (!lastM || (this.lastRenderedMsgId === lastM.id && subset.length >= 50))
       return;
 
     this.chatList.innerHTML = subset

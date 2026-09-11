@@ -1,4 +1,8 @@
-import { AUTO_CUSTOM_KEY, LEGACY_STORAGE_PREFIX, STORAGE_PREFIX } from "../constants.ts";
+import {
+  AUTO_CUSTOM_KEY,
+  LEGACY_STORAGE_PREFIX,
+  STORAGE_PREFIX,
+} from "../constants.ts";
 
 // Every localStorage access in the script goes through this file.
 //
