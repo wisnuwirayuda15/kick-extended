@@ -4,10 +4,9 @@ import { userscript } from "./src/meta.ts";
 
 export default defineConfig({
   build: {
-    // Container queries (@container / container-type: inline-size) are
-    // load-bearing in styles.css. A low CSS target makes lightningcss
-    // downlevel or strip them, so keep this high.
-    cssTarget: "chrome111",
+    // Unminified on purpose: the built userscript is committed, and keeping it
+    // readable means the output can be grepped and diffed between commits to
+    // prove a refactor changed nothing.
     minify: false,
   },
   plugins: [
