@@ -1360,75 +1360,72 @@
 		wrap.appendChild(menu);
 		switchButton.parentElement.insertBefore(wrap, switchButton);
 	}
-	(function() {
-		"use strict";
-		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
-		GM_addStyle(styles_default);
-		function destroyCustomPlayer() {
-			if (state.activeHls) {
-				try {
-					state.activeHls.destroy();
-				} catch (e) {}
-				state.activeHls = null;
-			}
-			if (state.activeChatController) {
-				try {
-					state.activeChatController.stop();
-				} catch (e) {}
-				state.activeChatController = null;
-			}
-			const customVideo = state.activePlayerUi?.vid || document.querySelector("#k-video");
-			if (customVideo) {
-				try {
-					customVideo.pause();
-					customVideo.removeAttribute("src");
-					customVideo.srcObject = null;
-					customVideo.load();
-				} catch (e) {}
-				customVideo.remove();
-			}
-			document.querySelectorAll("#k-player").forEach((el) => el.remove());
-			document.querySelector("#k-toast")?.remove();
-			document.querySelector("#k-copy-url-btn")?.remove();
-			document.querySelectorAll("[data-kick-unlocker-processing]").forEach((el) => delete el.dataset.kickUnlockerProcessing);
-			clearTimeout(state.autoSwitchTimer);
-			state.autoSwitchTimer = null;
-			state.nativeExternalCache = null;
-			state.activePlayerUi = null;
-			state.isUnlocking = false;
+	console.log(`Kick Extended: userscript loaded (v${GM_info.script.version})`);
+	GM_addStyle(styles_default);
+	function destroyCustomPlayer() {
+		if (state.activeHls) {
+			try {
+				state.activeHls.destroy();
+			} catch (e) {}
+			state.activeHls = null;
 		}
-		let lastHref = window.location.href;
-		function handleLocationChange() {
-			if (window.location.href === lastHref) return;
-			lastHref = window.location.href;
-			destroyCustomPlayer();
+		if (state.activeChatController) {
+			try {
+				state.activeChatController.stop();
+			} catch (e) {}
+			state.activeChatController = null;
 		}
-		["pushState", "replaceState"].forEach((method) => {
-			const original = history[method];
-			history[method] = function(...args) {
-				const returned = original.apply(this, args);
-				handleLocationChange();
-				return returned;
-			};
-		});
-		window.addEventListener("popstate", handleLocationChange);
-		window.addEventListener("hashchange", handleLocationChange);
-		window.addEventListener("pagehide", destroyCustomPlayer);
-		new MutationObserver(() => {
+		const customVideo = state.activePlayerUi?.vid || document.querySelector("#k-video");
+		if (customVideo) {
+			try {
+				customVideo.pause();
+				customVideo.removeAttribute("src");
+				customVideo.srcObject = null;
+				customVideo.load();
+			} catch (e) {}
+			customVideo.remove();
+		}
+		document.querySelectorAll("#k-player").forEach((el) => el.remove());
+		document.querySelector("#k-toast")?.remove();
+		document.querySelector("#k-copy-url-btn")?.remove();
+		document.querySelectorAll("[data-kick-unlocker-processing]").forEach((el) => delete el.dataset.kickUnlockerProcessing);
+		clearTimeout(state.autoSwitchTimer);
+		state.autoSwitchTimer = null;
+		state.nativeExternalCache = null;
+		state.activePlayerUi = null;
+		state.isUnlocking = false;
+	}
+	var lastHref = window.location.href;
+	function handleLocationChange() {
+		if (window.location.href === lastHref) return;
+		lastHref = window.location.href;
+		destroyCustomPlayer();
+	}
+	["pushState", "replaceState"].forEach((method) => {
+		const original = history[method];
+		history[method] = function(...args) {
+			const returned = original.apply(this, args);
 			handleLocationChange();
-			if (state.activePlayerUi?.vid && !state.activePlayerUi.vid.isConnected) destroyCustomPlayer();
-			const subscriberOverlay = document.querySelector(SUBSCRIBER_ONLY_SELECTOR);
-			ensureCopyUrlButton();
-			if (subscriberOverlay) {
-				const outerContainer = subscriberOverlay.closest(SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR);
-				if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !state.isUnlocking) unlockVideo(subscriberOverlay);
-				return;
-			}
-			ensureCustomPlayerToggle();
-		}).observe(document.body, {
-			childList: true,
-			subtree: true
-		});
+			return returned;
+		};
+	});
+	window.addEventListener("popstate", handleLocationChange);
+	window.addEventListener("hashchange", handleLocationChange);
+	window.addEventListener("pagehide", destroyCustomPlayer);
+	new MutationObserver(() => {
+		handleLocationChange();
+		if (state.activePlayerUi?.vid && !state.activePlayerUi.vid.isConnected) destroyCustomPlayer();
+		const subscriberOverlay = document.querySelector(SUBSCRIBER_ONLY_SELECTOR);
+		ensureCopyUrlButton();
+		if (subscriberOverlay) {
+			const outerContainer = subscriberOverlay.closest(SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR);
+			if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !state.isUnlocking) unlockVideo(subscriberOverlay);
+			return;
+		}
 		ensureCustomPlayerToggle();
-	})();
+	}).observe(document.body, {
+		childList: true,
+		subtree: true
+	});
+	ensureCustomPlayerToggle();
 })(Hls);
