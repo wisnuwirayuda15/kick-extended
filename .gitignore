@@ -1,0 +1,26 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+node_modules
+.vite
+*.local
+
+# The built userscript is committed on purpose, so it can be installed from
+# the raw URL without a build step. Everything else in dist/ is not.
+dist/*
+!dist/KickExtended.user.js
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
