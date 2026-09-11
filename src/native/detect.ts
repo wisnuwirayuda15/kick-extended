@@ -4,14 +4,16 @@ import {
   NATIVE_VIDEO_FALLBACK_SELECTOR,
   NATIVE_VIDEO_SELECTOR,
   PLAYER_CONTAINER_SELECTOR,
+  VIDEOS_LIST_PATH_REGEX,
+  VOD_PATH_REGEX,
 } from "../constants.ts";
 
 export function isVodPage() {
-  const pathParts = window.location.pathname.split("/").filter(Boolean);
-  return (
-    pathParts.length >= 3 &&
-    (pathParts[1] === "videos" || pathParts[1] === "video")
-  );
+  return VOD_PATH_REGEX.test(window.location.pathname);
+}
+
+export function isVideosListPage() {
+  return VIDEOS_LIST_PATH_REGEX.test(window.location.pathname);
 }
 
 export function getNativeVideo() {

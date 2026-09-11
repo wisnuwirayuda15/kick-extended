@@ -52,3 +52,23 @@ export const AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
  * for the readiness gate, then settles for this long and re-checks.
  */
 export const AUTO_SWITCH_SETTLE_MS = 700;
+
+/**
+ * The canonical VOD route. The two merged scripts disagreed: the downloader
+ * used an anchored /videos/ regex, while isVodPage also accepted the singular
+ * /video/ form and did not anchor the end. This accepts both spellings and
+ * anchors, so /chan/videos/123/extra no longer matches.
+ */
+export const VOD_PATH_REGEX = /^\/[^/]+\/videos?\/[^/]+\/?$/;
+
+/** A channel's video list page. */
+export const VIDEOS_LIST_PATH_REGEX = /^\/[^/]+\/videos\/?$/;
+
+/** Download button injected next to Kick's Subscribe button. */
+export const DOWNLOAD_BUTTON_ID = "k-download-btn";
+
+/** Per-thumbnail download button, revealed on hover. */
+export const THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
+
+/** Marks a thumbnail anchor as already carrying a download button. */
+export const THUMB_INJECTED_FLAG = "kDlInjected";

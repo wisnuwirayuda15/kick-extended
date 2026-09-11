@@ -62,6 +62,8 @@ import { setupPlayback } from "./player/quality.ts";
 import { createControls } from "./player/controls.ts";
 import { unlockVideo } from "./player/mount.ts";
 import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
+import { injectDownloadButton } from "./download/download-button.ts";
+import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
 
 
 console.log(`Kick Extended: userscript loaded (v${GM_info.script.version})`);
@@ -125,17 +127,37 @@ function handleLocationChange() {
   destroyCustomPlayer();
 }
 
+function runDownloadInjections() {
+  injectDownloadButton();
+  injectThumbnailButtons();
+}
+
 // Kick routes client-side, so there is no navigation event to hook. Patch
 // the history methods and cover the back/forward button separately.
+//
+// One patch, one callback list. Both merged scripts patched these same two
+// methods; patching a global twice is fragile and makes load order matter.
+// The two original timings are preserved rather than merged into one: the
+// player tears down synchronously, the download buttons re-inject after the
+// same 100ms delay the downloader always used.
+const navigationCallbacks = [
+  handleLocationChange,
+  () => setTimeout(runDownloadInjections, 100),
+];
+
+function onNavigate() {
+  navigationCallbacks.forEach((callback) => callback());
+}
+
 ["pushState", "replaceState"].forEach((method) => {
   const original = history[method];
   history[method] = function (...args) {
     const returned = original.apply(this, args);
-    handleLocationChange();
+    onNavigate();
     return returned;
   };
 });
-window.addEventListener("popstate", handleLocationChange);
+window.addEventListener("popstate", onNavigate);
 window.addEventListener("hashchange", handleLocationChange);
 window.addEventListener("pagehide", destroyCustomPlayer);
 
@@ -164,11 +186,17 @@ const observer = new MutationObserver(() => {
     ) {
       unlockVideo(subscriberOverlay);
     }
-    return;
+  } else {
+    // Skipped while the subscriber-only overlay is up. This was an early
+    // return before the merge; it is an else branch now so that the download
+    // injectors below still run in that case, as they did when the downloader
+    // had an observer of its own.
+    ensureCustomPlayerToggle();
   }
 
-  ensureCustomPlayerToggle();
+  runDownloadInjections();
 });
 observer.observe(document.body, { childList: true, subtree: true });
 ensureCustomPlayerToggle();
+runDownloadInjections();
 

@@ -208,3 +208,32 @@
 #k-volume::-moz-range-progress { height: 8px; border-radius: 999px; background: #53fc18; }
 #k-volume::-moz-range-thumb { width: 0; height: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 #k-volume-value { min-width: 34px; color: #ddd; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Download button on each video thumbnail, revealed on hover.
+   Was injected by KickVideoDownloader through its own <style> tag; it now
+   goes through the same GM_addStyle blob as the rest. */
+.k-thumb-dl-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  font-size: 18px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease-out, background 0.15s ease-out;
+}
+a:hover > .k-thumb-dl-btn,
+.k-thumb-dl-btn:focus-visible {
+  opacity: 1;
+}
+.k-thumb-dl-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
