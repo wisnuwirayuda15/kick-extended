@@ -1,6 +1,19 @@
 import Hls from "hls.js";
 import css from "./styles.css?raw";
 import { ICONS } from "./icons.ts";
+import {
+  AUTO_CUSTOM_KEY,
+  AUTO_SWITCH_SETTLE_MS,
+  BADGE_SELECTOR,
+  CHANNEL_NAME_SELECTOR,
+  CONTROL_ANCHOR_SELECTOR,
+  KICK_CHAT_SELECTOR,
+  NATIVE_VIDEO_FALLBACK_SELECTOR,
+  NATIVE_VIDEO_SELECTOR,
+  PLAYER_CONTAINER_SELECTOR,
+  SUBSCRIBER_ONLY_SELECTOR,
+  SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR,
+} from "./constants.ts";
 
 (function () {
   "use strict";
@@ -522,8 +535,6 @@ import { ICONS } from "./icons.ts";
     return ICONS.volumeHigh;
   }
 
-  const AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
-
   function isVodPage() {
     const pathParts = window.location.pathname.split("/").filter(Boolean);
     return (
@@ -545,10 +556,6 @@ import { ICONS } from "./icons.ts";
     });
   }
 
-  const CONTROL_ANCHOR_SELECTOR = '[data-testid="video-player-clip"]';
-  const BADGE_SELECTOR = 'svg[data-ds-icon="VerifiedBadge"]';
-  const CHANNEL_NAME_SELECTOR = 'h1#channel-username';
-  const AUTO_SWITCH_SETTLE_MS = 700;
   let autoSwitchTimer = null;
 
   function makeVideoTitle(result) {
@@ -734,9 +741,9 @@ import { ICONS } from "./icons.ts";
   window.addEventListener("pagehide", destroyCustomPlayer);
 
   function getNativeVideo() {
-    const byId = document.querySelector("#video-player");
+    const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
     if (byId && byId.id !== "k-video") return byId;
-    return document.querySelector("video:not(#k-video)");
+    return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
   }
 
   function showToast(message, duration = 5000) {
@@ -838,7 +845,7 @@ import { ICONS } from "./icons.ts";
     if (!nativeVideo) return null;
 
     // Kick's Tailwind classes churn between deploys, so this may miss.
-    const classMatch = nativeVideo.closest(".relative.flex.flex-col");
+    const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
     if (classMatch) return classMatch;
 
     // Fallback: climb while each ancestor still hugs the video box. The
@@ -866,7 +873,7 @@ import { ICONS } from "./icons.ts";
   function ensureCustomPlayerToggle() {
     if (!isVodPage() || isUnlocking) return;
     // Sub-only pages are handled automatically by the observer below.
-    if (document.querySelector('[data-testid="video-subscriber-only"]')) return;
+    if (document.querySelector(SUBSCRIBER_ONLY_SELECTOR)) return;
 
     const container: any = findNativePlayerContainer();
     if (!container || container.dataset.kickUnlockerProcessing) return;
@@ -990,7 +997,7 @@ import { ICONS } from "./icons.ts";
     if (isUnlocking) return;
     const container =
       explicitContainer ||
-      triggerElement?.closest(".relative.flex.flex-col") ||
+      triggerElement?.closest(PLAYER_CONTAINER_SELECTOR) ||
       null;
     if (!container || container.dataset.kickUnlockerProcessing) return;
 
@@ -1072,7 +1079,7 @@ import { ICONS } from "./icons.ts";
       container.style.background = "#000";
 
       // Check for Chat
-      const existingChat: any = document.querySelector("#chatroom-messages");
+      const existingChat: any = document.querySelector(KICK_CHAT_SELECTOR);
       let chatRoot = null;
       if (existingChat) {
         existingChat.innerHTML = "";
@@ -1758,14 +1765,14 @@ import { ICONS } from "./icons.ts";
     }
 
     const subscriberOverlay = document.querySelector(
-      '[data-testid="video-subscriber-only"]',
+      SUBSCRIBER_ONLY_SELECTOR,
     );
 
     ensureCopyUrlButton();
 
     if (subscriberOverlay) {
       const outerContainer = subscriberOverlay.closest(
-        ".relative.flex.flex-col.items-center.justify-center.overflow-hidden.rounded",
+        SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR,
       );
       if (
         outerContainer &&

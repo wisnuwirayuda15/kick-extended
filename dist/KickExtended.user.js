@@ -60,6 +60,16 @@
 		volumeLow: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/></svg>`,
 		volumeMute: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM22 9l-6 6m0-6l6 6"/></svg>`
 	};
+	var SUBSCRIBER_ONLY_SELECTOR = "[data-testid=\"video-subscriber-only\"]";
+	var CONTROL_ANCHOR_SELECTOR = "[data-testid=\"video-player-clip\"]";
+	var BADGE_SELECTOR = "svg[data-ds-icon=\"VerifiedBadge\"]";
+	var CHANNEL_NAME_SELECTOR = "h1#channel-username";
+	var NATIVE_VIDEO_SELECTOR = "#video-player";
+	var NATIVE_VIDEO_FALLBACK_SELECTOR = "video:not(#k-video)";
+	var PLAYER_CONTAINER_SELECTOR = ".relative.flex.flex-col";
+	var SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR = ".relative.flex.flex-col.items-center.justify-center.overflow-hidden.rounded";
+	var KICK_CHAT_SELECTOR = "#chatroom-messages";
+	var AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
 	(function() {
 		"use strict";
 		console.log("Kick Unlocker: Userscript loaded (v20.0 - Instant Zap)");
@@ -410,7 +420,6 @@
 			if (volume < .5) return ICONS.volumeMedium;
 			return ICONS.volumeHigh;
 		}
-		const AUTO_CUSTOM_KEY = "kick_unlocker_prefer_custom";
 		function isVodPage() {
 			const pathParts = window.location.pathname.split("/").filter(Boolean);
 			return pathParts.length >= 3 && (pathParts[1] === "videos" || pathParts[1] === "video");
@@ -425,10 +434,6 @@
 				} catch (e) {}
 			});
 		}
-		const CONTROL_ANCHOR_SELECTOR = "[data-testid=\"video-player-clip\"]";
-		const BADGE_SELECTOR = "svg[data-ds-icon=\"VerifiedBadge\"]";
-		const CHANNEL_NAME_SELECTOR = "h1#channel-username";
-		const AUTO_SWITCH_SETTLE_MS = 700;
 		let autoSwitchTimer = null;
 		function makeVideoTitle(result) {
 			return (result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
@@ -575,9 +580,9 @@
 		window.addEventListener("hashchange", handleLocationChange);
 		window.addEventListener("pagehide", destroyCustomPlayer);
 		function getNativeVideo() {
-			const byId = document.querySelector("#video-player");
+			const byId = document.querySelector(NATIVE_VIDEO_SELECTOR);
 			if (byId && byId.id !== "k-video") return byId;
-			return document.querySelector("video:not(#k-video)");
+			return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
 		}
 		function showToast(message, duration = 5e3) {
 			document.querySelector("#k-toast")?.remove();
@@ -661,7 +666,7 @@
 		function findNativePlayerContainer() {
 			const nativeVideo = getNativeVideo();
 			if (!nativeVideo) return null;
-			const classMatch = nativeVideo.closest(".relative.flex.flex-col");
+			const classMatch = nativeVideo.closest(PLAYER_CONTAINER_SELECTOR);
 			if (classMatch) return classMatch;
 			const videoRect = nativeVideo.getBoundingClientRect();
 			let node = nativeVideo.parentElement;
@@ -683,7 +688,7 @@
 				explicitContainer: container,
 				manualSwitch: true
 			});
-			if (localStorage.getItem(AUTO_CUSTOM_KEY) === "1") {
+			if (localStorage.getItem("kick_unlocker_prefer_custom") === "1") {
 				if (autoSwitchTimer || !isNativePlayerReady()) return;
 				autoSwitchTimer = setTimeout(() => {
 					autoSwitchTimer = null;
@@ -695,7 +700,7 @@
 						explicitContainer: readyContainer,
 						manualSwitch: true
 					});
-				}, AUTO_SWITCH_SETTLE_MS);
+				}, 700);
 				return;
 			}
 			const anchorButton = document.querySelector(CONTROL_ANCHOR_SELECTOR);
@@ -817,7 +822,7 @@
 				container.dataset.kickUnlockerProcessing = "true";
 				container.innerHTML = "";
 				container.style.background = "#000";
-				const existingChat = document.querySelector("#chatroom-messages");
+				const existingChat = document.querySelector(KICK_CHAT_SELECTOR);
 				let chatRoot = null;
 				if (existingChat) {
 					existingChat.innerHTML = "";
@@ -1324,10 +1329,10 @@
 		new MutationObserver(() => {
 			handleLocationChange();
 			if (activePlayerUi?.vid && !activePlayerUi.vid.isConnected) destroyCustomPlayer();
-			const subscriberOverlay = document.querySelector("[data-testid=\"video-subscriber-only\"]");
+			const subscriberOverlay = document.querySelector(SUBSCRIBER_ONLY_SELECTOR);
 			ensureCopyUrlButton();
 			if (subscriberOverlay) {
-				const outerContainer = subscriberOverlay.closest(".relative.flex.flex-col.items-center.justify-center.overflow-hidden.rounded");
+				const outerContainer = subscriberOverlay.closest(SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR);
 				if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !isUnlocking) unlockVideo(subscriberOverlay);
 				return;
 			}
