@@ -3,9 +3,6 @@
 A userscript that replaces Kick's VOD player with a custom hls.js-based one and
 adds a handful of things around it.
 
-Version 2.0.0. Formerly **KickNoSub** — renamed because unlocking
-subscriber-only VODs is one of ten features, not the whole script.
-
 ## Features
 
 - **Sub-only VOD unlock.** Detects Kick's subscriber-only overlay, resolves the
@@ -108,11 +105,6 @@ single `history` patch that drive everything. From there:
 ## Credits and license
 
 Based on [KickNoSub](https://github.com/Enmn/KickNoSub) by Enmn, which is
-licensed under Apache-2.0. This is a modified fork: the two original scripts
-(`KickNoSub.user.js` and a separate download-button script) have been merged,
-split into modules and rebuilt with `vite-plugin-monkey`.
+licensed under Apache-2.0. This is a modified script for userscript version, split into modules and rebuilt with `vite-plugin-monkey`.
 
 Licensed under [Apache-2.0](LICENSE).
-
-The download buttons hand off to `kick-video.download`, a third-party service
-that is not affiliated with this project.

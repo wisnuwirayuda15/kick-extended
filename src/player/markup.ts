@@ -63,7 +63,6 @@ export function buildPlayerMarkup() {
                             </div>
                         </div>
                         <div id="k-controls-right">
-                            <button id="k-update-btn" type="button" title="Open latest update" style="display:none;">${ICONS.update}</button>
                             <button id="k-native-btn" type="button" title="Kembali ke player Kick">${ICONS.swap}</button>
                             <div id="k-ext-wrap" class="k-ext-wrap">
                                 <button id="k-ext-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>

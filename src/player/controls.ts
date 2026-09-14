@@ -6,7 +6,6 @@ import {
   savePlayerSettings,
   saveResumeTime,
 } from "../lib/storage.ts";
-import { getLatestReleaseInfo } from "../lib/update-check.ts";
 import { state } from "../state.ts";
 import {
   buildExternalTargets,
@@ -45,7 +44,6 @@ export function createControls({
   const controls = videoParent.querySelector("#k-controls");
   const btnPlay = videoParent.querySelector("#k-play");
   const btnFs = videoParent.querySelector("#k-fs");
-  const btnUpdate = videoParent.querySelector("#k-update-btn");
   const btnNative = videoParent.querySelector("#k-native-btn");
   if (manualSwitch && btnNative) {
     btnNative.style.display = "inline-flex";
@@ -252,20 +250,6 @@ export function createControls({
   bindGlobalPlayerListeners();
 
   applyVolume(initialVolume, { persist: false });
-
-  getLatestReleaseInfo().then((release) => {
-    if (!release || !btnUpdate?.isConnected) return;
-
-    btnUpdate.style.display = "inline-flex";
-    btnUpdate.title = `Update available: ${release.name || release.tagName}`;
-    btnUpdate.addEventListener(
-      "click",
-      () => {
-        window.open(release.htmlUrl, "_blank", "noopener,noreferrer");
-      },
-      { once: true },
-    );
-  });
 
   // ---- External player handoff -------------------------------------
   // `streamUrl` is the raw master playlist; `finalUrl` only differs by the

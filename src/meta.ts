@@ -16,6 +16,6 @@ export const userscript: MonkeyUserScript = {
   // the bundle: GM_setClipboard has two call sites and GM_info one, which is
   // exactly the pattern that goes missing when only auto-collection is trusted.
   grant: ["GM_xmlhttpRequest", "GM_addStyle", "GM_setClipboard", "GM_info"],
-  connect: ["kick.com", "web.kick.com", "stream.kick.com", "api.github.com"],
+  connect: ["kick.com", "web.kick.com", "stream.kick.com"],
   "run-at": "document-idle",
 };

@@ -38,7 +38,7 @@
     #k-track { padding: 12px 0; }
     #k-controls button svg { width: 20px; height: 20px; }
     #k-quality-btn { padding: 3px 6px; font-size: 11px; }
-    #k-update-btn, #k-ext-btn { width: 25px; height: 25px; }
+    #k-ext-btn { width: 25px; height: 25px; }
     #k-big-play { width: 58px; height: 58px; }
     #k-big-play svg { width: 30px; height: 30px; }
     .k-center-seek { width: 40px; height: 40px; }
@@ -104,11 +104,6 @@
 #k-seek-indicator[data-direction="backward"] { left: 34%; }
 #k-seek-indicator[data-direction="forward"] { left: 66%; }
 #k-seek-indicator.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-#k-update-btn {
-    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
-    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff; border-radius: 8px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-}
 /* Sits inside Kick's own control bar, so it borrows their button classes and
    only needs a nudge of its own. */
 #k-switch-btn[data-kick-nosub] { cursor: pointer; }

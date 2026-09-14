@@ -91,27 +91,3 @@ export function setPreferCustom() {
 export function clearPreferCustom() {
   removeBoth(AUTO_CUSTOM_KEY);
 }
-
-export function normalizeVersion(version) {
-  return String(version || "")
-    .trim()
-    .replace(/^v/i, "")
-    .split(/[^0-9]+/)
-    .filter(Boolean)
-    .map((part) => parseInt(part, 10));
-}
-
-export function isVersionGreater(candidateVersion, currentVersion) {
-  const candidateParts = normalizeVersion(candidateVersion);
-  const currentParts = normalizeVersion(currentVersion);
-  const maxLength = Math.max(candidateParts.length, currentParts.length);
-
-  for (let index = 0; index < maxLength; index++) {
-    const candidate = candidateParts[index] || 0;
-    const current = currentParts[index] || 0;
-    if (candidate > current) return true;
-    if (candidate < current) return false;
-  }
-
-  return false;
-}
