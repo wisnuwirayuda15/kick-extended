@@ -6,6 +6,10 @@
 // @description  Unlock subscriber-only VODs, a custom HLS player with keyboard shortcuts and quality control, chat replay, external player handoff, and video downloads on Kick.
 // @license      Apache-2.0
 // @icon         https://kick.com/favicon.ico
+// @homepageURL  https://github.com/wisnuwirayuda15/kick-extended
+// @supportURL   https://github.com/wisnuwirayuda15/kick-extended/issues
+// @downloadURL  https://github.com/wisnuwirayuda15/kick-extended/releases/latest/download/KickExtended.user.js
+// @updateURL    https://github.com/wisnuwirayuda15/kick-extended/releases/latest/download/KickExtended.meta.js
 // @match        *://kick.com/*
 // @match        *://www.kick.com/*
 // @require      https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js
