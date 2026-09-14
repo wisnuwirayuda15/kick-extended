@@ -24,10 +24,23 @@ adds a handful of things around it.
 ## Install
 
 1. Install a userscript manager — Tampermonkey, Violentmonkey or Greasemonkey.
-2. Open [`dist/KickExtended.user.js`][raw] and the manager will offer to
-   install it.
+2. Open **[the latest release][install]** and the manager will offer to install
+   it.
 
-[raw]: https://github.com/wisnuwirayuda15/kick-extended/raw/main/dist/KickExtended.user.js
+[install]: https://github.com/wisnuwirayuda15/kick-extended/releases/latest/download/KickExtended.user.js
+
+That link always points at the newest release, so it is safe to bookmark or
+share.
+
+### Updates
+
+Installs update themselves. The script carries `@updateURL` and `@downloadURL`
+pointing at the latest release, so the manager checks periodically — on its own
+schedule, typically daily — and re-installs when a newer `@version` appears. The
+check downloads a ~1 KB header-only file rather than the whole script.
+
+To update immediately, use your manager's "Check for userscript updates"
+command, or just reinstall from the link above.
 
 hls.js is loaded from jsDelivr at runtime via `@require`, so it is not bundled
 into the script.
@@ -78,7 +91,8 @@ bun run build
 ```
 
 The built script is written to `dist/KickExtended.user.js`, which is committed
-so it can be installed from the raw URL without building.
+so it can be read straight from the repo. CI fails if it is stale, so rebuild
+and commit it alongside any change to `src/`.
 
 | Script           | Does                                  |
 | ---------------- | ------------------------------------- |
@@ -87,6 +101,26 @@ so it can be installed from the raw URL without building.
 | `bun run check`  | `node --check` on the built output    |
 | `bun run lint`   | ESLint over `src`                     |
 | `bun run format` | Prettier over the repo                |
+
+## Releasing
+
+Every push and pull request runs lint, type-check and build, and asserts the
+userscript header still carries its four `@grant`s, three `@connect`s, both
+`@match`es, the hls.js `@require` and the two update URLs.
+
+Pushing a `v*` tag also publishes a release:
+
+```bash
+git tag v2.0.1
+git push origin v2.0.1
+```
+
+CI takes `@version` from the tag, so it cannot ship stale — and since managers
+only re-install when `@version` increases, **the tag is what actually delivers
+an update**. Bump it for anything you want existing installs to receive.
+
+The release gets both `KickExtended.user.js` and the header-only
+`KickExtended.meta.js`, which is what `@updateURL` points at.
 
 ### Layout
 
