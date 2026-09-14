@@ -24,3 +24,10 @@ dist/*
 *.njsproj
 *.sln
 *.sw?
+
+# Working files kept locally but not published: the build brief, and the two
+# original scripts this project was ported from. Apache-2.0 attribution for
+# KickNoSub is carried by LICENSE and the README credits.
+PROMPT.md
+KickNoSub.user.js
+KickVideoDownloader.user.js
