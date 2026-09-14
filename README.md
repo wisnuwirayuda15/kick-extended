@@ -19,7 +19,6 @@ adds a handful of things around it.
 - **Copy stream URL** button in the channel header.
 - **Chat replay** synced to the video position.
 - **Download buttons** on VOD pages and on every video thumbnail.
-- **Update check** against the GitHub releases API.
 
 ## Install
 
@@ -102,6 +101,20 @@ and commit it alongside any change to `src/`.
 | `bun run lint`   | ESLint over `src`                     |
 | `bun run format` | Prettier over the repo                |
 
+### Layout
+
+`src/main.ts` is the bootstrap: it holds the single `MutationObserver` and the
+single `history` patch that drive everything. From there:
+
+- `lib/` — GM fetch wrapper, storage, Kick API, formatting, toast
+- `player/` — mount, controls, quality, shortcuts, markup, external handoff
+- `native/` — detecting and driving Kick's own player and buttons
+- `chat/` — chat replay
+- `download/` — download buttons
+- `constants.ts` — **every** Kick DOM selector, so a Kick redeploy means
+  editing one file
+- `styles.css` — the whole stylesheet, injected with `GM_addStyle`
+
 ## Releasing
 
 Every push and pull request runs lint, type-check and build, and asserts the
@@ -121,20 +134,6 @@ an update**. Bump it for anything you want existing installs to receive.
 
 The release gets both `KickExtended.user.js` and the header-only
 `KickExtended.meta.js`, which is what `@updateURL` points at.
-
-### Layout
-
-`src/main.ts` is the bootstrap: it holds the single `MutationObserver` and the
-single `history` patch that drive everything. From there:
-
-- `lib/` — GM fetch wrapper, storage, Kick API, update check, formatting, toast
-- `player/` — mount, controls, quality, shortcuts, markup, external handoff
-- `native/` — detecting and driving Kick's own player and buttons
-- `chat/` — chat replay
-- `download/` — download buttons
-- `constants.ts` — **every** Kick DOM selector, so a Kick redeploy means
-  editing one file
-- `styles.css` — the whole stylesheet, injected with `GM_addStyle`
 
 ## Credits and license
 
