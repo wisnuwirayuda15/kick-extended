@@ -18,6 +18,7 @@ import {
   isNativePlayerReady,
   isVodPage,
 } from "./detect.ts";
+import { getVodSlugs } from "../lib/vod-slugs.ts";
 
 export function ensureCustomPlayerToggle() {
   if (!isVodPage() || state.isUnlocking) return;
@@ -105,10 +106,7 @@ export function injectNativeExternalButton(anchorButton, switchButton) {
       return;
     }
 
-    const pathParts = window.location.pathname.split("/").filter(Boolean);
-    const channelSlug = pathParts[0];
-    const videoSlug = pathParts[2];
-    const cacheKey = `${channelSlug}/${videoSlug}`;
+    const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 
     wrap.classList.add("open");
 

@@ -221,6 +221,16 @@
 		}
 		return bestMatch;
 	}
+	function getVodSlugs(pathname = window.location.pathname) {
+		const pathParts = pathname.split("/").filter(Boolean);
+		const channelSlug = pathParts[0];
+		const videoSlug = pathParts[2];
+		return {
+			channelSlug,
+			videoSlug,
+			cacheKey: `${channelSlug}/${videoSlug}`
+		};
+	}
 	function ensureCopyUrlButton() {
 		if (!isVodPage()) return;
 		if (document.querySelector("#k-copy-url-btn")) return;
@@ -241,10 +251,7 @@
 			event.preventDefault();
 			event.stopPropagation();
 			if (button.dataset.busy === "1") return;
-			const pathParts = window.location.pathname.split("/").filter(Boolean);
-			const channelSlug = pathParts[0];
-			const videoSlug = pathParts[2];
-			const cacheKey = `${channelSlug}/${videoSlug}`;
+			const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 			if (state.nativeExternalCache?.key !== cacheKey) {
 				button.dataset.busy = "1";
 				setLabel("Loading...", null);
@@ -1139,10 +1146,7 @@
 		if (state.isUnlocking) return;
 		const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
 		if (!container || container.dataset.kickUnlockerProcessing) return;
-		const pathParts = window.location.pathname.split("/").filter(Boolean);
-		const channelSlug = pathParts[0];
-		let videoSlug = pathParts[2];
-		if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
+		const { channelSlug, videoSlug } = getVodSlugs();
 		const resumeKey = getResumeKey(channelSlug, videoSlug);
 		const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
 		const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
@@ -1291,10 +1295,7 @@
 				closeMenu();
 				return;
 			}
-			const pathParts = window.location.pathname.split("/").filter(Boolean);
-			const channelSlug = pathParts[0];
-			const videoSlug = pathParts[2];
-			const cacheKey = `${channelSlug}/${videoSlug}`;
+			const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 			wrap.classList.add("open");
 			if (state.nativeExternalCache?.key !== cacheKey) {
 				menu.innerHTML = `<div class="k-ext-heading">Mengambil stream URL...</div>`;

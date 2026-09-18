@@ -22,6 +22,7 @@ import {
   buildStreamNotFoundMarkup,
 } from "./markup.ts";
 import { setupPlayback } from "./quality.ts";
+import { getVodSlugs } from "../lib/vod-slugs.ts";
 
 export async function unlockVideo(triggerElement, options: any = {}) {
   const { explicitContainer = null, manualSwitch = false } = options;
@@ -32,10 +33,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
     null;
   if (!container || container.dataset.kickUnlockerProcessing) return;
 
-  const pathParts = window.location.pathname.split("/").filter(Boolean);
-  const channelSlug = pathParts[0];
-  let videoSlug = pathParts[2];
-  if (!videoSlug && pathParts[1] === "video") videoSlug = pathParts[2];
+  const { channelSlug, videoSlug } = getVodSlugs();
   const resumeKey = getResumeKey(channelSlug, videoSlug);
   const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
   const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);

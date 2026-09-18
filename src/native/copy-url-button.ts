@@ -1,6 +1,7 @@
 import { resolveStream } from "../lib/kick-api.ts";
 import { state } from "../state.ts";
 import { findCopyButtonAnchor, isVodPage } from "./detect.ts";
+import { getVodSlugs } from "../lib/vod-slugs.ts";
 
 export function ensureCopyUrlButton() {
   // Needs a video slug to resolve a stream, so channel pages are out.
@@ -29,10 +30,7 @@ export function ensureCopyUrlButton() {
     event.stopPropagation();
     if (button.dataset.busy === "1") return;
 
-    const pathParts = window.location.pathname.split("/").filter(Boolean);
-    const channelSlug = pathParts[0];
-    const videoSlug = pathParts[2];
-    const cacheKey = `${channelSlug}/${videoSlug}`;
+    const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 
     if (state.nativeExternalCache?.key !== cacheKey) {
       button.dataset.busy = "1";
