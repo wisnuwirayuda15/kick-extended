@@ -3,6 +3,17 @@
 A userscript that replaces Kick's VOD player with a custom hls.js-based one and
 adds a handful of things around it.
 
+## Disclaimer
+
+This project is intended for **educational, research and learning purposes
+only**. It exists to study how a userscript can extend a web player — HLS
+playback, DOM integration, streaming a large file to disk, userscript build
+tooling — and is not affiliated with, endorsed by or supported by Kick.
+
+Use it only on content you are entitled to access, and respect Kick's terms of
+service and the rights of the creators whose VODs you watch or download. How
+you use it is your responsibility.
+
 ## Features
 
 - **Sub-only VOD unlock.** Detects Kick's subscriber-only overlay, resolves the
