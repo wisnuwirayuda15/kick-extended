@@ -232,3 +232,90 @@ a:hover > .k-thumb-dl-btn,
 .k-thumb-dl-btn:hover {
   background: rgba(0, 0, 0, 0.9);
 }
+
+/* Download dialog and progress panel.
+   Body-level and fixed, sitting at the same z-index as #k-toast: both must
+   escape #k-player, which is removed on SPA navigation and is the only
+   @container context in this file. */
+#k-download-dialog {
+    position: fixed; inset: 0; z-index: 2147483000; display: flex;
+    align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55);
+    font-family: Inter, sans-serif;
+}
+#k-download-dialog .k-dl-dialog {
+    width: min(420px, 92vw); max-height: 80vh; overflow-y: auto; padding: 16px 18px;
+    border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(7, 7, 7, 0.92);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); color: #fff;
+}
+#k-download-dialog .k-dl-heading {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45); margin-bottom: 12px;
+}
+#k-download-dialog .k-dl-note {
+    font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+}
+#k-download-dialog .k-dl-qualities { display: flex; flex-direction: column; gap: 4px; }
+#k-download-dialog .k-dl-quality {
+    width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid transparent; background: rgba(255, 255, 255, 0.06);
+    color: #fff; font-size: 12px; font-family: inherit; cursor: pointer;
+    transition: background .15s ease;
+}
+#k-download-dialog .k-dl-quality:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+#k-download-dialog .k-dl-quality.active {
+    background: rgba(83, 252, 24, 0.08); border-color: rgba(83, 252, 24, 0.4); color: #53fc18;
+}
+#k-download-dialog .k-dl-quality:disabled { opacity: 0.45; cursor: default; }
+#k-download-dialog .k-dl-footer { display: flex; gap: 8px; margin-top: 14px; }
+#k-download-dialog .k-dl-primary,
+#k-download-dialog .k-dl-secondary {
+    padding: 7px 12px; border-radius: 8px; font-size: 12px; font-family: inherit;
+    cursor: pointer; transition: background .15s ease, color .15s ease;
+}
+#k-download-dialog .k-dl-primary {
+    border: 1px solid rgba(83, 252, 24, 0.4); background: rgba(83, 252, 24, 0.12); color: #53fc18;
+}
+#k-download-dialog .k-dl-primary:hover:not(:disabled) { background: rgba(83, 252, 24, 0.2); }
+#k-download-dialog .k-dl-primary:disabled { opacity: 0.5; cursor: default; }
+#k-download-dialog .k-dl-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.75); margin-left: auto;
+}
+#k-download-dialog .k-dl-secondary:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+#k-download-panel {
+    position: fixed; right: 18px; bottom: 18px; z-index: 2147483000; width: 300px;
+    padding: 12px 14px; border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.92);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+    color: #fff; font-family: Inter, sans-serif; font-size: 12px; line-height: 1.4;
+}
+#k-download-panel .k-dl-panel-title {
+    font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+#k-download-panel .k-dl-bar {
+    height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.15); overflow: hidden;
+}
+#k-download-panel .k-dl-bar-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, #53fc18, #9dff57); transition: width .2s ease;
+}
+#k-download-panel[data-state="failed"] .k-dl-bar-fill { background: #ff6b6b; }
+#k-download-panel .k-dl-panel-detail {
+    margin: 8px 0 10px; color: rgba(255, 255, 255, 0.75);
+    font-variant-numeric: tabular-nums;
+}
+#k-download-panel .k-dl-panel-action {
+    padding: 5px 10px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.75);
+    font-size: 11px; font-family: inherit; cursor: pointer;
+}
+#k-download-panel .k-dl-panel-action:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16); color: #fff;
+}
+#k-download-panel .k-dl-panel-action:disabled { opacity: 0.5; cursor: default; }
