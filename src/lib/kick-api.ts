@@ -33,6 +33,9 @@ export async function getVideoMetadata(channelSlug, videoSlug) {
       video: targetVideo,
       channelId: channelId,
       channelSlug: channelSlug,
+      // Display-cased ("xQc") where the slug is lowercase ("xqc"). Kept for
+      // the download filename; falls back rather than risking undefined.
+      channelName: chData.user?.username || chData.slug || channelSlug,
     };
   } catch (e) {
     return null;

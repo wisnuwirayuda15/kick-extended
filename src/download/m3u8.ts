@@ -45,7 +45,9 @@ export function parseMasterPlaylist(text: string, playlistUrl: string) {
         height: parseInt(height, 10) || 0,
         frameRate: parseFloat(attributes["FRAME-RATE"]) || 0,
         codecs: attributes.CODECS || "",
-        name: attributes.NAME || "",
+        // Kick emits no NAME; it labels variants with VIDEO="1080p60",
+        // which is what its own quality menu shows.
+        name: attributes.NAME || attributes.VIDEO || "",
       };
     } else if (!line.startsWith("#") && pending) {
       pending.url = new URL(line, playlistUrl).href;

@@ -109,7 +109,8 @@
 		try {
 			const chRes = await gmFetch(`https://kick.com/api/v2/channels/${channelSlug}`);
 			if (!chRes.ok) return null;
-			const channelId = chRes.json().id;
+			const chData = chRes.json();
+			const channelId = chData.id;
 			const vidRes = await gmFetch(`https://web.kick.com/api/v1/channels/${channelId}/videos`, { headers: {
 				Accept: "application/json",
 				"Alt-Used": "web.kick.com",
@@ -125,7 +126,8 @@
 			return {
 				video: targetVideo,
 				channelId,
-				channelSlug
+				channelSlug,
+				channelName: chData.user?.username || chData.slug || channelSlug
 			};
 		} catch (e) {
 			return null;
@@ -1653,6 +1655,19 @@
 	function buildDownloadUrl(videoUrl) {
 		return `https://kick-video.download/?download=${encodeURIComponent(videoUrl)}`;
 	}
+	var ILLEGAL = /[\\/:*?"<>|]/g;
+	function clean(value, limit) {
+		return String(value || "").replace(ILLEGAL, "").replace(/\s+/g, " ").trim().slice(0, limit).trim();
+	}
+	function makeDownloadFileName(parts) {
+		const resolution = clean(parts.resolution, 12);
+		const title = clean(parts.title, 80) || "kick-vod";
+		const channel = clean(parts.channel, 40);
+		let name = title;
+		if (channel) name += ` - ${channel}`;
+		if (resolution) name = `(${resolution}) ${name}`;
+		return name.replace(/[. ]+$/, "") || "kick-vod";
+	}
 	function getPickerHost() {
 		if (typeof window.showSaveFilePicker === "function") return window;
 		const unsafe = typeof unsafeWindow !== "undefined" ? unsafeWindow : null;
@@ -1684,7 +1699,7 @@
 					height: parseInt(height, 10) || 0,
 					frameRate: parseFloat(attributes["FRAME-RATE"]) || 0,
 					codecs: attributes.CODECS || "",
-					name: attributes.NAME || ""
+					name: attributes.NAME || attributes.VIDEO || ""
 				};
 			} else if (!line.startsWith("#") && pending) {
 				pending.url = new URL(line, playlistUrl).href;
@@ -1742,6 +1757,9 @@
 			duration,
 			initSegment
 		};
+	}
+	function qualityLabel(variant) {
+		return variant.name || `${variant.height}p`;
 	}
 	function formatSize(bytes) {
 		const gb = bytes / 1024 ** 3;
@@ -1844,7 +1862,7 @@
 			option.type = "button";
 			option.className = "k-dl-quality";
 			option.disabled = !available;
-			option.textContent = `${variant.name || `${variant.height}p`} · ${(variant.bandwidth / 1e6).toFixed(1)} Mbps · ~${formatSize(variant.bandwidth / 8 * duration)}`;
+			option.textContent = `${qualityLabel(variant)} · ${(variant.bandwidth / 1e6).toFixed(1)} Mbps · ~${formatSize(variant.bandwidth / 8 * duration)}`;
 			option.addEventListener("click", () => {
 				selected = variant;
 				for (const el of list.children) el.classList.remove("active");
@@ -1863,10 +1881,15 @@
 			const host = getPickerHost();
 			if (!host) return;
 			const title = makeVideoTitle(cache.result);
+			const fileName = `${makeDownloadFileName({
+				resolution: qualityLabel(selected),
+				title,
+				channel: cache.result?.channelName || cache.result?.channelSlug
+			})}.ts`;
 			let handle;
 			try {
 				handle = await host.showSaveFilePicker({
-					suggestedName: `${title}.ts`,
+					suggestedName: fileName,
 					types: [{
 						description: "MPEG transport stream",
 						accept: { "video/mp2t": [".ts"] }
@@ -1882,7 +1905,7 @@
 				close();
 				showDownloadPanel(await startDownload({
 					fileHandle: handle,
-					fileName: `${title}.ts`,
+					fileName,
 					vodTitle: title,
 					segments: media.segments,
 					initSegment: media.initSegment,

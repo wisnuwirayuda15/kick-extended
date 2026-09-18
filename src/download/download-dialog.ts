@@ -6,6 +6,7 @@ import { state } from "../state.ts";
 import { startDownload } from "./download-engine.ts";
 import { showDownloadPanel } from "./download-panel.ts";
 import { buildDownloadUrl } from "./download-url.ts";
+import { makeDownloadFileName } from "./file-name.ts";
 import { canStreamToDisk, getPickerHost } from "./fs-access.ts";
 import { parseMasterPlaylist, parseMediaPlaylist } from "./m3u8.ts";
 
@@ -13,6 +14,11 @@ import { parseMasterPlaylist, parseMediaPlaylist } from "./m3u8.ts";
 //
 // Body-level and modal rather than a dropdown, because it must outlive
 // #k-player and escape the @container queries, which only apply inside it.
+
+/** One label for both the quality list and the filename, so they agree. */
+function qualityLabel(variant: any) {
+  return variant.name || `${variant.height}p`;
+}
 
 function formatSize(bytes: number) {
   const gb = bytes / 1024 ** 3;
@@ -162,7 +168,7 @@ function render(
     option.className = "k-dl-quality";
     option.disabled = !available;
 
-    const label = variant.name || `${variant.height}p`;
+    const label = qualityLabel(variant);
     const mbps = (variant.bandwidth / 1e6).toFixed(1);
     const size = formatSize((variant.bandwidth / 8) * duration);
     option.textContent = `${label} · ${mbps} Mbps · ~${size}`;
@@ -188,13 +194,20 @@ function render(
     if (!host) return;
 
     const title = makeVideoTitle(cache.result);
+    // Named for the quality actually selected, so two downloads of the same
+    // VOD at different qualities do not collide.
+    const fileName = `${makeDownloadFileName({
+      resolution: qualityLabel(selected),
+      title,
+      channel: cache.result?.channelName || cache.result?.channelSlug,
+    })}.ts`;
     let handle: any;
     try {
       // First statement on the click. Transient user activation lasts about
       // five seconds, and everything slow already happened while the dialog
       // was loading, so nothing is allowed to creep in ahead of this.
       handle = await host.showSaveFilePicker({
-        suggestedName: `${title}.ts`,
+        suggestedName: fileName,
         types: [
           {
             description: "MPEG transport stream",
@@ -216,7 +229,7 @@ function render(
       close();
       const active = await startDownload({
         fileHandle: handle,
-        fileName: `${title}.ts`,
+        fileName,
         vodTitle: title,
         segments: media.segments,
         initSegment: media.initSegment,
