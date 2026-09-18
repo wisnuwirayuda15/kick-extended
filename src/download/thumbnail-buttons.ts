@@ -3,7 +3,7 @@ import {
   THUMB_INJECTED_FLAG,
   VOD_PATH_REGEX,
 } from "../constants.ts";
-import { buildDownloadUrl } from "./download-url.ts";
+import { openDownloadDialog } from "./download-dialog.ts";
 import { createDownloadIcon } from "./icon.ts";
 
 export function injectThumbnailButtons() {
@@ -32,7 +32,9 @@ export function injectThumbnailButtons() {
       // Stop the click from triggering the anchor navigation
       event.preventDefault();
       event.stopPropagation();
-      window.open(buildDownloadUrl(videoUrl), "_blank", "noopener");
+      // The dialog resolves this thumbnail's VOD, not whatever page we are on.
+      const target = new URL(videoUrl);
+      openDownloadDialog({ pathname: target.pathname, pageUrl: target.href });
     });
 
     anchor.appendChild(button);

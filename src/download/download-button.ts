@@ -1,6 +1,7 @@
 import { DOWNLOAD_BUTTON_ID } from "../constants.ts";
 import { isVodPage } from "../native/detect.ts";
-import { buildDownloadUrl } from "./download-url.ts";
+import { state } from "../state.ts";
+import { openDownloadDialog } from "./download-dialog.ts";
 import { createDownloadIcon } from "./icon.ts";
 
 // Reported, not changed: this scans every `button span` on the page, and the
@@ -31,6 +32,7 @@ function createDownloadButton(referenceButton) {
   button.appendChild(createDownloadIcon());
 
   const label = document.createElement("span");
+  label.className = "k-dl-btn-label";
   label.textContent = "Download";
   label.style.marginLeft = "6px";
   button.appendChild(label);
@@ -42,7 +44,7 @@ function createDownloadButton(referenceButton) {
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    window.open(buildDownloadUrl(window.location.href), "_blank", "noopener");
+    openDownloadDialog();
   });
 
   return button;
@@ -55,11 +57,35 @@ export function injectDownloadButton() {
     return;
   }
 
-  if (document.getElementById(DOWNLOAD_BUTTON_ID)) return; // already injected
+  const existing = document.getElementById(DOWNLOAD_BUTTON_ID);
+  if (existing) {
+    syncDownloadButtonState(existing);
+    return;
+  }
 
   const subscribeButton = findSubscribeButton();
   if (!subscribeButton) return;
 
   const downloadButton = createDownloadButton(subscribeButton);
   subscribeButton.insertAdjacentElement("afterend", downloadButton);
+}
+
+/**
+ * Reflects whether a download is already running.
+ *
+ * One at a time: a second pool would double the memory bound and halve both
+ * downloads' throughput. This is called from the MutationObserver, which on a
+ * live VOD page fires constantly, so it compares against the last rendered
+ * state and touches the DOM only when that actually changed.
+ */
+function syncDownloadButtonState(button: any) {
+  const next = state.activeDownload ? "busy" : "idle";
+  if (button.dataset.dlState === next) return;
+  button.dataset.dlState = next;
+
+  const busy = next === "busy";
+  button.disabled = busy;
+  button.style.opacity = busy ? "0.6" : "";
+  const label = button.querySelector(".k-dl-btn-label");
+  if (label) label.textContent = busy ? "Downloading…" : "Download";
 }

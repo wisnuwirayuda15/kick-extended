@@ -64,6 +64,8 @@
 	var DOWNLOAD_BUTTON_ID = "k-download-btn";
 	var THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
 	var THUMB_INJECTED_FLAG = "kDlInjected";
+	var DOWNLOAD_DIALOG_ID = "k-download-dialog";
+	var DOWNLOAD_PANEL_ID = "k-download-panel";
 	var state = {
 		activeHls: null,
 		activeChatController: null,
@@ -1319,8 +1321,585 @@
 		wrap.appendChild(menu);
 		switchButton.parentElement.insertBefore(wrap, switchButton);
 	}
+	var RETRYABLE_STATUS = new Set([
+		408,
+		425,
+		429,
+		500,
+		502,
+		503,
+		504
+	]);
+	function tagged(name, message) {
+		const error = new Error(message);
+		error.name = name;
+		return error;
+	}
+	function sleep(ms, signal) {
+		return new Promise((resolve, reject) => {
+			if (signal.aborted) {
+				reject(signal.reason);
+				return;
+			}
+			const onAbort = () => {
+				clearTimeout(timer);
+				reject(signal.reason);
+			};
+			const timer = setTimeout(() => {
+				signal.removeEventListener("abort", onAbort);
+				resolve();
+			}, ms);
+			signal.addEventListener("abort", onAbort, { once: true });
+		});
+	}
+	async function fetchSegmentWithRetry(segment, signal, throttle) {
+		let lastError = null;
+		for (let attempt = 0; attempt < 3; attempt++) {
+			if (attempt > 0) await sleep(1e3 * 2 ** (attempt - 1), signal);
+			try {
+				const response = await fetch(segment.url, {
+					signal,
+					credentials: "omit",
+					cache: "no-store",
+					headers: segment.range ? { Range: `bytes=${segment.range.start}-${segment.range.end}` } : void 0
+				});
+				if (!response.ok) {
+					response.body?.cancel();
+					if (response.status === 429) {
+						const retryAfter = parseInt(response.headers.get("Retry-After") || "", 10);
+						throttle.until = Date.now() + (Number.isFinite(retryAfter) ? retryAfter * 1e3 : 5e3);
+						lastError = tagged("HttpError", "HTTP 429");
+						continue;
+					}
+					if (RETRYABLE_STATUS.has(response.status)) {
+						lastError = tagged("HttpError", `HTTP ${response.status}`);
+						continue;
+					}
+					throw tagged("FatalSegmentError", `HTTP ${response.status}`);
+				}
+				return new Uint8Array(await response.arrayBuffer());
+			} catch (error) {
+				if (error.name === "AbortError") throw error;
+				if (error.name === "FatalSegmentError") throw error;
+				lastError = error;
+			}
+		}
+		throw tagged("ExhaustedError", `${segment.url}: ${lastError ? lastError.message : "unknown"}`);
+	}
+	function makeGate() {
+		let waiters = [];
+		return {
+			wait: () => new Promise((resolve) => waiters.push(resolve)),
+			wake: () => {
+				const pending = waiters;
+				waiters = [];
+				for (const resolve of pending) resolve();
+			}
+		};
+	}
+	var FAILED = Symbol("failed-segment");
+	async function runPipeline(active, segments) {
+		const { controller, writable, progress } = active;
+		const signal = controller.signal;
+		const gate = makeGate();
+		const done = new Map();
+		let nextToFetch = 0;
+		let nextToWrite = 0;
+		let consecutiveFailures = 0;
+		async function worker() {
+			for (;;) {
+				if (signal.aborted || active.stopReason) return;
+				if (nextToFetch >= segments.length) return;
+				if (nextToFetch >= nextToWrite + 16) {
+					await gate.wait();
+					continue;
+				}
+				const pause = progress.throttle.until - Date.now();
+				if (pause > 0) {
+					await sleep(pause, signal);
+					continue;
+				}
+				const index = nextToFetch++;
+				let value;
+				try {
+					value = await fetchSegmentWithRetry(segments[index], signal, progress.throttle);
+				} catch (error) {
+					if (error.name === "AbortError") throw error;
+					value = FAILED;
+				}
+				done.set(index, value);
+				gate.wake();
+			}
+		}
+		async function writer() {
+			while (nextToWrite < segments.length) {
+				if (signal.aborted || active.stopReason) return;
+				const value = done.get(nextToWrite);
+				if (value === void 0) {
+					await gate.wait();
+					continue;
+				}
+				done.delete(nextToWrite);
+				if (value === FAILED) {
+					progress.gaps.push(nextToWrite);
+					consecutiveFailures++;
+					if (consecutiveFailures >= 5) {
+						active.stopReason = "segments-unavailable";
+						gate.wake();
+						return;
+					}
+				} else {
+					try {
+						await writable.write(value);
+					} catch (error) {
+						active.stopReason = error && error.name === "QuotaExceededError" ? "out-of-space" : "write-failed";
+						active.stopError = error;
+						gate.wake();
+						return;
+					}
+					progress.bytesWritten += value.byteLength;
+					consecutiveFailures = 0;
+				}
+				nextToWrite++;
+				progress.segmentsWritten++;
+				gate.wake();
+			}
+		}
+		const workers = [];
+		for (let i = 0; i < 8; i++) workers.push(worker());
+		await Promise.allSettled([...workers, writer()]);
+	}
+	function computeSnapshot(active, ewma) {
+		const p = active.progress;
+		const percent = p.totalSegments ? p.segmentsWritten / p.totalSegments * 100 : 0;
+		const estimatedTotalBytes = p.segmentsWritten >= 5 ? p.bytesWritten / p.segmentsWritten * p.totalSegments : p.estimatedTotalBytes;
+		const remaining = Math.max(0, estimatedTotalBytes - p.bytesWritten);
+		return {
+			status: active.status,
+			fileName: active.fileName,
+			vodTitle: active.vodTitle,
+			bytesWritten: p.bytesWritten,
+			estimatedTotalBytes,
+			percent,
+			bytesPerSecond: ewma,
+			etaSeconds: ewma > 0 ? remaining / ewma : null,
+			segmentsWritten: p.segmentsWritten,
+			totalSegments: p.totalSegments,
+			gapCount: p.gaps.length,
+			stopReason: active.stopReason
+		};
+	}
+	function emit(active, snapshot) {
+		active.snapshot = snapshot;
+		for (const subscriber of active.subscribers) try {
+			subscriber(snapshot);
+		} catch {}
+	}
+	function subscribeToDownload(fn) {
+		const active = state.activeDownload;
+		if (!active) return () => {};
+		active.subscribers.add(fn);
+		if (active.snapshot) fn(active.snapshot);
+		return () => active.subscribers.delete(fn);
+	}
+	async function finalize(active, status) {
+		clearInterval(active.progressTimer);
+		window.removeEventListener("beforeunload", active.onBeforeUnload);
+		try {
+			if (active.discard) await active.writable.abort();
+			else await active.writable.close();
+		} catch {}
+		active.status = status;
+		emit(active, computeSnapshot(active, 0));
+		state.activeDownload = null;
+	}
+	function cancelDownload(discard = false) {
+		const active = state.activeDownload;
+		if (!active) return Promise.resolve();
+		if (active.finalizing) return active.finalizing;
+		active.status = "cancelling";
+		active.discard = discard;
+		active.controller.abort();
+		emit(active, computeSnapshot(active, 0));
+		return active.finalizing || Promise.resolve();
+	}
+	async function startDownload(options) {
+		if (state.activeDownload) return state.activeDownload;
+		const { fileHandle, fileName, vodTitle, segments, initSegment, estimatedTotalBytes } = options;
+		const writable = await fileHandle.createWritable();
+		const controller = new AbortController();
+		const active = {
+			status: "running",
+			controller,
+			writable,
+			fileName,
+			vodTitle,
+			subscribers: new Set(),
+			snapshot: null,
+			progressTimer: null,
+			finalizing: null,
+			discard: false,
+			stopReason: null,
+			stopError: null,
+			onBeforeUnload: (event) => {
+				event.preventDefault();
+				event.returnValue = "";
+			},
+			progress: {
+				bytesWritten: 0,
+				segmentsWritten: 0,
+				totalSegments: segments.length,
+				estimatedTotalBytes: estimatedTotalBytes || 0,
+				gaps: [],
+				startedAt: Date.now(),
+				throttle: { until: 0 }
+			}
+		};
+		state.activeDownload = active;
+		window.addEventListener("beforeunload", active.onBeforeUnload);
+		let lastBytes = 0;
+		let lastTime = performance.now();
+		let ewma = 0;
+		active.progressTimer = setInterval(() => {
+			const now = performance.now();
+			const elapsed = (now - lastTime) / 1e3;
+			if (elapsed > 0) {
+				const instant = (active.progress.bytesWritten - lastBytes) / elapsed;
+				ewma = ewma === 0 ? instant : ewma * .8 + instant * .2;
+				lastBytes = active.progress.bytesWritten;
+				lastTime = now;
+			}
+			emit(active, computeSnapshot(active, ewma));
+		}, 250);
+		const run = async () => {
+			try {
+				if (initSegment) {
+					const head = await fetchSegmentWithRetry(initSegment, controller.signal, active.progress.throttle);
+					await writable.write(head);
+					active.progress.bytesWritten += head.byteLength;
+				}
+				await runPipeline(active, segments);
+			} catch {}
+			let status = "done";
+			if (controller.signal.aborted) status = "cancelled";
+			else if (active.stopReason) status = "failed";
+			active.finalizing = finalize(active, status);
+			return active.finalizing;
+		};
+		active.runner = run();
+		return active;
+	}
+	function formatBytes(bytes) {
+		if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
+		const gb = bytes / 1024 ** 3;
+		if (gb >= 1) return `${gb.toFixed(2)} GB`;
+		return `${Math.round(bytes / 1024 ** 2)} MB`;
+	}
+	function describe(snapshot) {
+		if (snapshot.status === "running") {
+			const rate = snapshot.bytesPerSecond ? ` · ${(snapshot.bytesPerSecond / 1024 ** 2).toFixed(1)} MB/s` : "";
+			const eta = snapshot.etaSeconds === null ? " · --:--" : ` · ${formatTime(snapshot.etaSeconds)} left`;
+			return `${formatBytes(snapshot.bytesWritten)} of ~${formatBytes(snapshot.estimatedTotalBytes)}${rate}${eta}`;
+		}
+		if (snapshot.status === "cancelling") return "Finishing the current segment…";
+		const written = `${snapshot.segmentsWritten} of ${snapshot.totalSegments} segments`;
+		const gaps = snapshot.gapCount ? ` · ${snapshot.gapCount} gap${snapshot.gapCount === 1 ? "" : "s"} (~${Math.round(snapshot.gapCount * 10)} s missing)` : "";
+		if (snapshot.status === "cancelled") return `Cancelled — kept ${written}${gaps}`;
+		if (snapshot.status === "failed") return `Stopped (${snapshot.stopReason === "out-of-space" ? "ran out of disk space" : snapshot.stopReason === "segments-unavailable" ? "segments stopped responding" : "write failed"}) — kept ${written}${gaps}`;
+		return `Done — ${written}${gaps}`;
+	}
+	function showDownloadPanel() {
+		document.getElementById(DOWNLOAD_PANEL_ID)?.remove();
+		const panel = document.createElement("div");
+		panel.id = DOWNLOAD_PANEL_ID;
+		const title = document.createElement("div");
+		title.className = "k-dl-panel-title";
+		const bar = document.createElement("div");
+		bar.className = "k-dl-bar";
+		const fill = document.createElement("div");
+		fill.className = "k-dl-bar-fill";
+		bar.appendChild(fill);
+		const detail = document.createElement("div");
+		detail.className = "k-dl-panel-detail";
+		const action = document.createElement("button");
+		action.type = "button";
+		action.className = "k-dl-panel-action";
+		panel.append(title, bar, detail, action);
+		document.body.appendChild(panel);
+		let unsubscribe = null;
+		const dismiss = () => {
+			if (unsubscribe) unsubscribe();
+			panel.remove();
+		};
+		const render = (snapshot) => {
+			title.textContent = snapshot.vodTitle || snapshot.fileName;
+			fill.style.width = `${Math.min(100, snapshot.percent).toFixed(1)}%`;
+			detail.textContent = describe(snapshot);
+			const finished = snapshot.status === "done" || snapshot.status === "cancelled" || snapshot.status === "failed";
+			panel.dataset.state = snapshot.status;
+			action.textContent = finished ? "Close" : "Cancel";
+			action.disabled = snapshot.status === "cancelling";
+		};
+		action.addEventListener("click", () => {
+			if ([
+				"done",
+				"cancelled",
+				"failed"
+			].includes(panel.dataset.state || "")) dismiss();
+			else cancelDownload();
+		});
+		unsubscribe = subscribeToDownload(render);
+		return panel;
+	}
 	function buildDownloadUrl(videoUrl) {
 		return `https://kick-video.download/?download=${encodeURIComponent(videoUrl)}`;
+	}
+	function getPickerHost() {
+		if (typeof window.showSaveFilePicker === "function") return window;
+		const unsafe = typeof unsafeWindow !== "undefined" ? unsafeWindow : null;
+		if (unsafe && typeof unsafe.showSaveFilePicker === "function") return unsafe;
+		return null;
+	}
+	function canStreamToDisk() {
+		return getPickerHost() !== null;
+	}
+	function parseAttributes(line) {
+		const attributes = {};
+		const pattern = /([A-Z0-9-]+)=("[^"]*"|[^,]*)/g;
+		let match;
+		while ((match = pattern.exec(line)) !== null) attributes[match[1]] = match[2].replace(/^"|"$/g, "");
+		return attributes;
+	}
+	function parseMasterPlaylist(text, playlistUrl) {
+		const variants = [];
+		let pending = null;
+		for (const raw of text.split(/\r?\n/)) {
+			const line = raw.trim();
+			if (!line) continue;
+			if (line.startsWith("#EXT-X-STREAM-INF:")) {
+				const attributes = parseAttributes(line);
+				const [width, height] = String(attributes.RESOLUTION || "x").split("x");
+				pending = {
+					bandwidth: parseInt(attributes.BANDWIDTH, 10) || 0,
+					width: parseInt(width, 10) || 0,
+					height: parseInt(height, 10) || 0,
+					frameRate: parseFloat(attributes["FRAME-RATE"]) || 0,
+					codecs: attributes.CODECS || "",
+					name: attributes.NAME || ""
+				};
+			} else if (!line.startsWith("#") && pending) {
+				pending.url = new URL(line, playlistUrl).href;
+				variants.push(pending);
+				pending = null;
+			}
+		}
+		return variants.sort((a, b) => b.bandwidth - a.bandwidth);
+	}
+	function parseMediaPlaylist(text, playlistUrl) {
+		const segments = [];
+		let duration = 0;
+		let initSegment = null;
+		let pendingDuration = 0;
+		let pendingRange = null;
+		let rangeCursor = 0;
+		for (const raw of text.split(/\r?\n/)) {
+			const line = raw.trim();
+			if (!line) continue;
+			if (line.startsWith("#EXTINF:")) pendingDuration = parseFloat(line.slice(8)) || 0;
+			else if (line.startsWith("#EXT-X-BYTERANGE:")) {
+				const [length, offset] = line.slice(17).split("@");
+				const start = offset !== void 0 ? parseInt(offset, 10) : rangeCursor;
+				rangeCursor = start + parseInt(length, 10);
+				pendingRange = {
+					start,
+					end: rangeCursor - 1
+				};
+			} else if (line.startsWith("#EXT-X-MAP:")) {
+				const attributes = parseAttributes(line);
+				const [length, offset] = String(attributes.BYTERANGE || "").split("@");
+				const start = parseInt(offset, 10) || 0;
+				initSegment = {
+					url: new URL(attributes.URI, playlistUrl).href,
+					range: length ? {
+						start,
+						end: start + parseInt(length, 10) - 1
+					} : null
+				};
+			} else if (line.startsWith("#EXT-X-KEY:")) {
+				if (parseAttributes(line).METHOD !== "NONE") throw new Error("Encrypted playlists are not supported");
+			} else if (!line.startsWith("#")) {
+				segments.push({
+					url: new URL(line, playlistUrl).href,
+					duration: pendingDuration,
+					range: pendingRange
+				});
+				duration += pendingDuration;
+				pendingDuration = 0;
+				pendingRange = null;
+			}
+		}
+		return {
+			segments,
+			duration,
+			initSegment
+		};
+	}
+	function formatSize(bytes) {
+		const gb = bytes / 1024 ** 3;
+		return gb >= 1 ? `${gb.toFixed(1)} GB` : `${Math.round(bytes / 1024 ** 2)} MB`;
+	}
+	async function fetchText(url) {
+		const response = await fetch(url, {
+			credentials: "omit",
+			cache: "no-store"
+		});
+		if (!response.ok) throw new Error(`HTTP ${response.status}`);
+		return response.text();
+	}
+	function openDownloadDialog(options = {}) {
+		const pathname = options.pathname || window.location.pathname;
+		const pageUrl = options.pageUrl || window.location.href;
+		document.getElementById(DOWNLOAD_DIALOG_ID)?.remove();
+		const backdrop = document.createElement("div");
+		backdrop.id = DOWNLOAD_DIALOG_ID;
+		const dialog = document.createElement("div");
+		dialog.className = "k-dl-dialog";
+		backdrop.appendChild(dialog);
+		const close = () => {
+			backdrop.remove();
+			document.removeEventListener("keydown", onKey);
+		};
+		const onKey = (event) => {
+			if (event.key === "Escape") close();
+		};
+		document.addEventListener("keydown", onKey);
+		backdrop.addEventListener("click", (event) => {
+			if (event.target === backdrop) close();
+		});
+		const heading = document.createElement("div");
+		heading.className = "k-dl-heading";
+		heading.textContent = "Download VOD";
+		const body = document.createElement("div");
+		body.className = "k-dl-body";
+		body.textContent = "Resolving stream…";
+		const footer = document.createElement("div");
+		footer.className = "k-dl-footer";
+		const handoff = document.createElement("button");
+		handoff.type = "button";
+		handoff.className = "k-dl-secondary";
+		handoff.textContent = "Use kick-video.download";
+		handoff.addEventListener("click", () => {
+			window.open(buildDownloadUrl(pageUrl), "_blank", "noopener");
+			close();
+		});
+		footer.appendChild(handoff);
+		dialog.append(heading, body, footer);
+		document.body.appendChild(backdrop);
+		load(body, footer, pathname, close);
+		return backdrop;
+	}
+	async function load(body, footer, pathname, close) {
+		const { channelSlug, videoSlug, cacheKey } = getVodSlugs(pathname);
+		if (!channelSlug || !videoSlug) {
+			body.textContent = "This does not look like a VOD page.";
+			return;
+		}
+		try {
+			if (state.nativeExternalCache?.key !== cacheKey) {
+				const resolved = await resolveStream(channelSlug, videoSlug);
+				if (!resolved) {
+					body.textContent = "Stream not found.";
+					return;
+				}
+				state.nativeExternalCache = {
+					key: cacheKey,
+					...resolved
+				};
+			}
+			const cache = state.nativeExternalCache;
+			const variants = parseMasterPlaylist(await fetchText(cache.streamUrl), cache.streamUrl);
+			if (!variants.length) {
+				body.textContent = "No qualities found in the playlist.";
+				return;
+			}
+			const duration = parseMediaPlaylist(await fetchText(variants[0].url), variants[0].url).duration;
+			render(body, footer, variants, duration, cache, close);
+		} catch (error) {
+			body.textContent = `Could not read the playlist: ${error.message}`;
+		}
+	}
+	function render(body, footer, variants, duration, cache, close) {
+		body.textContent = "";
+		const available = canStreamToDisk();
+		if (!available) {
+			const note = document.createElement("div");
+			note.className = "k-dl-note";
+			note.textContent = "This browser cannot save large files directly to disk (the File System Access API is Chromium-only), so the built-in downloader is unavailable here. The link below still works.";
+			body.appendChild(note);
+		}
+		const list = document.createElement("div");
+		list.className = "k-dl-qualities";
+		let selected = variants.find((v) => v.height === 720) || variants[Math.min(1, variants.length - 1)];
+		for (const variant of variants) {
+			const option = document.createElement("button");
+			option.type = "button";
+			option.className = "k-dl-quality";
+			option.disabled = !available;
+			option.textContent = `${variant.name || `${variant.height}p`} · ${(variant.bandwidth / 1e6).toFixed(1)} Mbps · ~${formatSize(variant.bandwidth / 8 * duration)}`;
+			option.addEventListener("click", () => {
+				selected = variant;
+				for (const el of list.children) el.classList.remove("active");
+				option.classList.add("active");
+			});
+			if (variant === selected) option.classList.add("active");
+			list.appendChild(option);
+		}
+		body.appendChild(list);
+		if (!available) return;
+		const start = document.createElement("button");
+		start.type = "button";
+		start.className = "k-dl-primary";
+		start.textContent = "Download";
+		start.addEventListener("click", async () => {
+			const host = getPickerHost();
+			if (!host) return;
+			const title = makeVideoTitle(cache.result);
+			let handle;
+			try {
+				handle = await host.showSaveFilePicker({
+					suggestedName: `${title}.ts`,
+					types: [{
+						description: "MPEG transport stream",
+						accept: { "video/mp2t": [".ts"] }
+					}]
+				});
+			} catch {
+				return;
+			}
+			start.disabled = true;
+			start.textContent = "Reading playlist…";
+			try {
+				const media = parseMediaPlaylist(await fetchText(selected.url), selected.url);
+				close();
+				showDownloadPanel();
+				await startDownload({
+					fileHandle: handle,
+					fileName: `${title}.ts`,
+					vodTitle: title,
+					segments: media.segments,
+					initSegment: media.initSegment,
+					estimatedTotalBytes: selected.bandwidth / 8 * media.duration
+				});
+			} catch (error) {
+				start.disabled = false;
+				start.textContent = "Download";
+				body.appendChild(Object.assign(document.createElement("div"), {
+					className: "k-dl-note",
+					textContent: `Could not start: ${error.message}`
+				}));
+			}
+		});
+		footer.insertBefore(start, footer.firstChild);
 	}
 	function createDownloadIcon() {
 		const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1343,6 +1922,7 @@
 		button.style.marginLeft = "8px";
 		button.appendChild(createDownloadIcon());
 		const label = document.createElement("span");
+		label.className = "k-dl-btn-label";
 		label.textContent = "Download";
 		label.style.marginLeft = "6px";
 		button.appendChild(label);
@@ -1351,7 +1931,7 @@
 		button.addEventListener("click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			window.open(buildDownloadUrl(window.location.href), "_blank", "noopener");
+			openDownloadDialog();
 		});
 		return button;
 	}
@@ -1360,20 +1940,25 @@
 			document.getElementById(DOWNLOAD_BUTTON_ID)?.remove();
 			return;
 		}
-		if (document.getElementById("k-download-btn")) return;
+		const existing = document.getElementById(DOWNLOAD_BUTTON_ID);
+		if (existing) {
+			syncDownloadButtonState(existing);
+			return;
+		}
 		const subscribeButton = findSubscribeButton();
 		if (!subscribeButton) return;
 		const downloadButton = createDownloadButton(subscribeButton);
 		subscribeButton.insertAdjacentElement("afterend", downloadButton);
 	}
-	function getPickerHost() {
-		if (typeof window.showSaveFilePicker === "function") return window;
-		const unsafe = typeof unsafeWindow !== "undefined" ? unsafeWindow : null;
-		if (unsafe && typeof unsafe.showSaveFilePicker === "function") return unsafe;
-		return null;
-	}
-	function canStreamToDisk() {
-		return getPickerHost() !== null;
+	function syncDownloadButtonState(button) {
+		const next = state.activeDownload ? "busy" : "idle";
+		if (button.dataset.dlState === next) return;
+		button.dataset.dlState = next;
+		const busy = next === "busy";
+		button.disabled = busy;
+		button.style.opacity = busy ? "0.6" : "";
+		const label = button.querySelector(".k-dl-btn-label");
+		if (label) label.textContent = busy ? "Downloading…" : "Download";
 	}
 	function injectThumbnailButtons() {
 		const anchors = document.querySelectorAll("a[href*=\"/videos/\"]");
@@ -1391,7 +1976,11 @@
 			button.addEventListener("click", (event) => {
 				event.preventDefault();
 				event.stopPropagation();
-				window.open(buildDownloadUrl(videoUrl), "_blank", "noopener");
+				const target = new URL(videoUrl);
+				openDownloadDialog({
+					pathname: target.pathname,
+					pageUrl: target.href
+				});
 			});
 			anchor.appendChild(button);
 		}
