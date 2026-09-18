@@ -28,4 +28,15 @@ export const state = {
 
   /** Pending auto-switch settle timer. */
   autoSwitchTimer: null as any,
+
+  /**
+   * In-flight VOD download, or null.
+   *
+   * destroyCustomPlayer() must NOT clear this. Every other field here is
+   * per-page and dies with the player; this one deliberately outlives SPA
+   * navigation so a download measured in tens of minutes is not killed by the
+   * user clicking through to another VOD. Only finalize() in
+   * download-engine.ts may null it.
+   */
+  activeDownload: null as any,
 };

@@ -69,6 +69,9 @@ function destroyCustomPlayer() {
   state.nativeExternalCache = null;
   state.activePlayerUi = null;
   state.isUnlocking = false;
+  // state.activeDownload is deliberately NOT cleared here. See state.ts: a
+  // download has to survive SPA navigation. Adding it to this list would look
+  // like tidying up and would silently kill every long download.
 }
 
 let lastHref = window.location.href;

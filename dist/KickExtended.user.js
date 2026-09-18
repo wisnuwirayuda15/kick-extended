@@ -70,7 +70,8 @@
 		nativeExternalCache: null,
 		isUnlocking: false,
 		activePlayerUi: null,
-		autoSwitchTimer: null
+		autoSwitchTimer: null,
+		activeDownload: null
 	};
 	function gmFetch(url, opts = {}) {
 		return new Promise((resolve, reject) => {
