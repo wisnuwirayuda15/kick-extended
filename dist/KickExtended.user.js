@@ -20,6 +20,7 @@
 // @grant        GM_info
 // @grant        GM_setClipboard
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -1363,6 +1364,15 @@
 		const downloadButton = createDownloadButton(subscribeButton);
 		subscribeButton.insertAdjacentElement("afterend", downloadButton);
 	}
+	function getPickerHost() {
+		if (typeof window.showSaveFilePicker === "function") return window;
+		const unsafe = typeof unsafeWindow !== "undefined" ? unsafeWindow : null;
+		if (unsafe && typeof unsafe.showSaveFilePicker === "function") return unsafe;
+		return null;
+	}
+	function canStreamToDisk() {
+		return getPickerHost() !== null;
+	}
 	function injectThumbnailButtons() {
 		const anchors = document.querySelectorAll("a[href*=\"/videos/\"]");
 		for (const anchor of anchors) {
@@ -1384,7 +1394,7 @@
 			anchor.appendChild(button);
 		}
 	}
-	console.log(`Kick Extended: userscript loaded (v${GM_info.script.version})`);
+	console.log(`Kick Extended: userscript loaded (v${GM_info.script.version}), stream-to-disk ${canStreamToDisk() ? "available" : "unavailable"}`);
 	GM_addStyle(styles_default);
 	function destroyCustomPlayer() {
 		if (state.activeHls) {

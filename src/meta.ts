@@ -31,7 +31,16 @@ export const userscript: MonkeyUserScript = {
   // Declared explicitly even though the plugin also auto-collects grants from
   // the bundle: GM_setClipboard has two call sites and GM_info one, which is
   // exactly the pattern that goes missing when only auto-collection is trusted.
-  grant: ["GM_xmlhttpRequest", "GM_addStyle", "GM_setClipboard", "GM_info"],
+  grant: [
+    "GM_xmlhttpRequest",
+    "GM_addStyle",
+    "GM_setClipboard",
+    "GM_info",
+    // Only reached where a manager does not forward showSaveFilePicker onto the
+    // sandboxed window. Declared rather than left to autoGrant so it cannot
+    // vanish if that fallback is ever refactored.
+    "unsafeWindow",
+  ],
   connect: ["kick.com", "web.kick.com", "stream.kick.com"],
   "run-at": "document-idle",
 };

@@ -8,9 +8,16 @@ import { ensureCopyUrlButton } from "./native/copy-url-button.ts";
 import { unlockVideo } from "./player/mount.ts";
 import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
 import { injectDownloadButton } from "./download/download-button.ts";
+import { canStreamToDisk } from "./download/fs-access.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
 
-console.log(`Kick Extended: userscript loaded (v${GM_info.script.version})`);
+// The disk-streaming capability is reported at startup rather than assumed:
+// the probe that established it ran under a different @grant set, and the
+// built-in downloader is only offered where it is actually available.
+console.log(
+  `Kick Extended: userscript loaded (v${GM_info.script.version}), ` +
+    `stream-to-disk ${canStreamToDisk() ? "available" : "unavailable"}`,
+);
 
 GM_addStyle(css);
 

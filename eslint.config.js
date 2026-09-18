@@ -18,6 +18,7 @@ export default tseslint.config(
         GM_setClipboard: "readonly",
         GM_info: "readonly",
         Hls: "readonly",
+        unsafeWindow: "readonly",
       },
     },
     rules: {
