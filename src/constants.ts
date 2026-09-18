@@ -72,3 +72,36 @@ export const THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
 
 /** Marks a thumbnail anchor as already carrying a download button. */
 export const THUMB_INJECTED_FLAG = "kDlInjected";
+
+/**
+ * Downloader tuning.
+ *
+ * Measured against stream.kick.com: no throttling at 4/8/16/24 concurrent, and
+ * throughput stops improving past ~16 parallel connections. 8 sits near the
+ * knee while staying under the browser's 6-per-host HTTP/1.1 pool plus headroom.
+ *
+ * The window is what bounds memory. A worker may only claim a segment within
+ * DOWNLOAD_WINDOW of the one still waiting to be written, so at most that many
+ * ~10.5 MB segments are ever resident: roughly 180 MB, flat, whether the VOD is
+ * 20 minutes or 15 hours. Widening it past 2x concurrency buys nothing and
+ * costs memory linearly.
+ */
+export const DOWNLOAD_CONCURRENCY = 8;
+export const DOWNLOAD_WINDOW = 16;
+
+/** 3 attempts means two backoff sleeps: 1s then 2s. */
+export const DOWNLOAD_MAX_ATTEMPTS = 3;
+
+/**
+ * Consecutive segment failures before giving up entirely. Isolated flakes are
+ * survivable and get skipped; a wall of failures means the playlist is stale or
+ * the VOD was trimmed, and every remaining fetch will fail the same way.
+ */
+export const DOWNLOAD_FAILURE_BREAKER = 5;
+
+/** Progress emit rate. Decoupled from writes so the ETA still moves during a stall. */
+export const DOWNLOAD_PROGRESS_INTERVAL_MS = 250;
+
+/** Dialog and progress panel. */
+export const DOWNLOAD_DIALOG_ID = "k-download-dialog";
+export const DOWNLOAD_PANEL_ID = "k-download-panel";
