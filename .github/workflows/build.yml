@@ -57,7 +57,7 @@ jobs:
             [ "$got" = "$2" ] || { echo "::error::@$1: expected $2 in $3, found $got"; exit 1; }
           }
           for f in "$user" "$meta"; do
-            check grant       4 "$f"
+            check grant       5 "$f"
             check connect     3 "$f"
             check match       2 "$f"
             check require     1 "$f"

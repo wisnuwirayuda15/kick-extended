@@ -271,3 +271,52 @@ actually want that — it is not needed for mpv or VLC.
 - Segment URLs are simple sequential names (`0.ts` … `5314.ts`) resolved
   relative to the media playlist directory, so enumeration needs no parsing
   beyond reading `#EXTINF` lines.
+
+---
+
+## Outcome — Stage A built, 2026-09-18
+
+The sandbox question in §2 was answered with a throwaway probe on
+Violentmonkey 2.49.0:
+
+| Browser | `window.showSaveFilePicker` | `unsafeWindow.` | End-to-end write         |
+| ------- | --------------------------- | --------------- | ------------------------ |
+| Chrome  | `function`                  | `function`      | PASS — real file created |
+| Firefox | `undefined`                 | `undefined`     | no picker                |
+
+So the sandboxed `window` works and no `@grant unsafeWindow` was needed for
+Chrome, though the grant is declared anyway because the fallback arm
+references the identifier. Firefox matches the caniuse data exactly and takes
+the feature-detected path: quality list disabled, `kick-video.download` only.
+
+**Stage A shipped. Stage B was not built**, as recommended — `.ts` already
+plays in mpv, and `mux.js` would be a dependency added purely for browser
+playability.
+
+### One correction to §2
+
+An earlier draft of the implementation plan claimed `showSaveFilePicker` must
+be called synchronously because any `await` consumes user activation. The
+probe disproved it: a 50 ms `await` and the picker still opened. The real rule
+is a **time budget** — Chrome's transient activation lasts about five seconds
+and the picker consumes it.
+
+The two-click dialog flow survived that correction for a better reason: a cold
+`findStreamUrlFromMetadata` probes up to 33 URLs sequentially with 3 s
+timeouts, which can exceed the budget by an order of magnitude. A one-click
+design would have worked on a warm cache and failed on a cold one — failing
+intermittently rather than consistently, which is worse.
+
+### What the numbers turned into
+
+- `DOWNLOAD_CONCURRENCY = 8`, `DOWNLOAD_WINDOW = 16` — from the "no throttling
+  to 24, plateau near 16" measurement in §6.
+- The window is anchored to the **write** cursor, which is what bounds memory
+  to ~16 × 10.5 MB ≈ 180 MB regardless of VOD length. Anchoring it to the
+  completed-buffer size instead would have let one slow segment buffer the
+  whole 11.3 GB — the exact failure §1 says streaming to disk exists to avoid.
+- `credentials: "omit"` is mandatory, not hygiene: the
+  `Access-Control-Allow-Origin: *` measured in §3 is invalid for credentialed
+  requests.
+- The quality picker defaults to 720p60 and shows projected sizes from §1,
+  because there is no way to check free space for a picker-chosen location.

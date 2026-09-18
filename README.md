@@ -18,7 +18,11 @@ adds a handful of things around it.
   to the custom player, and the choice is remembered for later visits.
 - **Copy stream URL** button in the channel header.
 - **Chat replay** synced to the video position.
-- **Download buttons** on VOD pages and on every video thumbnail.
+- **Built-in downloader.** The Download button on a VOD page, and the button
+  on every video thumbnail, open a dialog that lists each available quality
+  with its projected size and streams the VOD straight to disk with progress
+  and cancel. Chromium desktop only — elsewhere it falls back to the
+  third-party kick-video.download handoff.
 
 ## Install
 
@@ -110,7 +114,7 @@ single `history` patch that drive everything. From there:
 - `player/` — mount, controls, quality, shortcuts, markup, external handoff
 - `native/` — detecting and driving Kick's own player and buttons
 - `chat/` — chat replay
-- `download/` — download buttons
+- `download/` — the download dialog, playlist parser and download engine
 - `constants.ts` — **every** Kick DOM selector, so a Kick redeploy means
   editing one file
 - `styles.css` — the whole stylesheet, injected with `GM_addStyle`
@@ -118,7 +122,7 @@ single `history` patch that drive everything. From there:
 ## Releasing
 
 Every push and pull request runs lint, type-check and build, and asserts the
-userscript header still carries its four `@grant`s, three `@connect`s, both
+userscript header still carries its five `@grant`s, three `@connect`s, both
 `@match`es, the hls.js `@require` and the two update URLs.
 
 Pushing a `v*` tag also publishes a release:
