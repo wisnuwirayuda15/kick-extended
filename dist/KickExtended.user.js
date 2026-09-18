@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Kick Extended
 // @namespace    https://github.com/wisnuwirayuda15/kick-extended
-// @version      3.0.0
+// @version      3.0.1
 // @author       Wisnu Wirayuda
 // @description  Unlock subscriber-only VODs, a custom HLS player with keyboard shortcuts and quality control, chat replay, external player handoff, and video downloads on Kick.
 // @license      Apache-2.0
-// @icon         https://kick.com/favicon.ico
+// @icon         https://raw.githubusercontent.com/wisnuwirayuda15/kick-extended/main/assets/icon.png
 // @homepageURL  https://github.com/wisnuwirayuda15/kick-extended
 // @supportURL   https://github.com/wisnuwirayuda15/kick-extended/issues
 // @downloadURL  https://github.com/wisnuwirayuda15/kick-extended/releases/latest/download/KickExtended.user.js

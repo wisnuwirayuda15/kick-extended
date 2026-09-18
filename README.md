@@ -1,3 +1,5 @@
+![Kick Extended](assets/social-preview.png)
+
 # Kick Extended
 
 A userscript that replaces Kick's VOD player with a custom hls.js-based one and
@@ -129,6 +131,10 @@ single `history` patch that drive everything. From there:
 - `constants.ts` — **every** Kick DOM selector, so a Kick redeploy means
   editing one file
 - `styles.css` — the whole stylesheet, injected with `GM_addStyle`
+
+The images in `assets/` are generated, not drawn by hand. `node
+tools/make-images.mjs` redraws them from the palette in `styles.css`, with no
+dependencies — rerun it if those colours ever change.
 
 ## Releasing
 

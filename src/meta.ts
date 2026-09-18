@@ -14,12 +14,14 @@ export const userscript: MonkeyUserScript = {
   name: "Kick Extended",
   namespace: REPO,
   // Overridden at build time from the git tag; see vite.config.ts.
-  version: "3.0.0",
+  version: "3.0.1",
   description:
     "Unlock subscriber-only VODs, a custom HLS player with keyboard shortcuts and quality control, chat replay, external player handoff, and video downloads on Kick.",
   author: "Wisnu Wirayuda",
   match: ["*://kick.com/*", "*://www.kick.com/*"],
-  icon: "https://kick.com/favicon.ico",
+  // Served from the default branch rather than a release asset, so the icon
+  // can be corrected without cutting a release. Managers cache it anyway.
+  icon: "https://raw.githubusercontent.com/wisnuwirayuda15/kick-extended/main/assets/icon.png",
   homepageURL: REPO,
   supportURL: `${REPO}/issues`,
   // Auto-update. The manager polls updateURL, which serves only the header, and
