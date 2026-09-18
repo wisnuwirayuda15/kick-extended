@@ -480,7 +480,7 @@
 		return ICONS.volumeHigh;
 	}
 	function makeVideoTitle(result) {
-		return (result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
+		return (result?.video?.title || result?.video?.session_title || document.title || "kick-vod").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 80) || "kick-vod";
 	}
 	function launchScheme(schemeUrl) {
 		const anchor = document.createElement("a");
@@ -1495,8 +1495,7 @@
 			subscriber(snapshot);
 		} catch {}
 	}
-	function subscribeToDownload(fn) {
-		const active = state.activeDownload;
+	function subscribeToDownload(active, fn) {
 		if (!active) return () => {};
 		active.subscribers.add(fn);
 		if (active.snapshot) fn(active.snapshot);
@@ -1608,7 +1607,7 @@
 		if (snapshot.status === "failed") return `Stopped (${snapshot.stopReason === "out-of-space" ? "ran out of disk space" : snapshot.stopReason === "segments-unavailable" ? "segments stopped responding" : "write failed"}) — kept ${written}${gaps}`;
 		return `Done — ${written}${gaps}`;
 	}
-	function showDownloadPanel() {
+	function showDownloadPanel(active) {
 		document.getElementById(DOWNLOAD_PANEL_ID)?.remove();
 		const panel = document.createElement("div");
 		panel.id = DOWNLOAD_PANEL_ID;
@@ -1648,7 +1647,7 @@
 			].includes(panel.dataset.state || "")) dismiss();
 			else cancelDownload();
 		});
-		unsubscribe = subscribeToDownload(render);
+		unsubscribe = subscribeToDownload(active, render);
 		return panel;
 	}
 	function buildDownloadUrl(videoUrl) {
@@ -1881,15 +1880,14 @@
 			try {
 				const media = parseMediaPlaylist(await fetchText(selected.url), selected.url);
 				close();
-				showDownloadPanel();
-				await startDownload({
+				showDownloadPanel(await startDownload({
 					fileHandle: handle,
 					fileName: `${title}.ts`,
 					vodTitle: title,
 					segments: media.segments,
 					initSegment: media.initSegment,
 					estimatedTotalBytes: selected.bandwidth / 8 * media.duration
-				});
+				}));
 			} catch (error) {
 				start.disabled = false;
 				start.textContent = "Download";

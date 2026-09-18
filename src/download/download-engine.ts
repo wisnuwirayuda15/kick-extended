@@ -201,8 +201,15 @@ function emit(active: any, snapshot: any) {
   }
 }
 
-export function subscribeToDownload(fn: any) {
-  const active = state.activeDownload;
+/**
+ * Subscribes to a download's progress.
+ *
+ * Takes the download rather than reading state.activeDownload, because the
+ * panel used to be created one line before startDownload() had set it: the
+ * subscription silently bound to nothing and the progress bar never moved.
+ * Passing it in makes that ordering mistake impossible to express.
+ */
+export function subscribeToDownload(active: any, fn: any) {
   if (!active) return () => {};
   active.subscribers.add(fn);
   // Replay the last snapshot so a panel mounting mid-download renders real

@@ -1,5 +1,13 @@
 export function makeVideoTitle(result) {
-  const raw = result?.video?.session_title || document.title || "kick-vod";
+  // The videos API returns `title`. `session_title` is inherited from an
+  // older shape and is not present on web.kick.com/api/v1/channels/:id/videos,
+  // so this used to fall through to document.title for every VOD -- which is
+  // the channel page's title, not the video's.
+  const raw =
+    result?.video?.title ||
+    result?.video?.session_title ||
+    document.title ||
+    "kick-vod";
   return (
     raw
       .replace(/[\\/:*?"<>|]/g, "")

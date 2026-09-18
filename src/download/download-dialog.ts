@@ -214,8 +214,7 @@ function render(
         selected.url,
       );
       close();
-      showDownloadPanel();
-      await startDownload({
+      const active = await startDownload({
         fileHandle: handle,
         fileName: `${title}.ts`,
         vodTitle: title,
@@ -223,6 +222,7 @@ function render(
         initSegment: media.initSegment,
         estimatedTotalBytes: (selected.bandwidth / 8) * media.duration,
       });
+      showDownloadPanel(active);
     } catch (error: any) {
       start.disabled = false;
       start.textContent = "Download";

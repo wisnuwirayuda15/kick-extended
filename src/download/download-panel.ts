@@ -53,7 +53,7 @@ function describe(snapshot: any) {
   return `Done — ${written}${gaps}`;
 }
 
-export function showDownloadPanel() {
+export function showDownloadPanel(active: any) {
   document.getElementById(DOWNLOAD_PANEL_ID)?.remove();
 
   const panel = document.createElement("div");
@@ -109,6 +109,6 @@ export function showDownloadPanel() {
     else cancelDownload();
   });
 
-  unsubscribe = subscribeToDownload(render);
+  unsubscribe = subscribeToDownload(active, render);
   return panel;
 }
