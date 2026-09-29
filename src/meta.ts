@@ -14,7 +14,7 @@ export const userscript: MonkeyUserScript = {
   name: "Kick Extended",
   namespace: REPO,
   // Overridden at build time from the git tag; see vite.config.ts.
-  version: "4.0.0",
+  version: "4.0.1",
   description:
     "Unlock subscriber-only VODs, a custom HLS player with keyboard shortcuts and quality control, chat replay, external player handoff, and video downloads on Kick.",
   author: "Wisnu Wirayuda",
