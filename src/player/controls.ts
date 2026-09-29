@@ -123,12 +123,18 @@ export function createControls({
       return;
     }
 
+    // Re-check the element itself rather than trusting the event that asked.
+    // `stalled` in particular fires under hls.js while buffered data is still
+    // playing, and nothing afterwards would take the spinner back down.
     loadingStateTimeout = setTimeout(() => {
-      if (!vid.paused && !vid.ended) {
+      if (!vid.paused && !vid.ended && isBuffering()) {
         loadingOverlay.classList.add("visible");
       }
     }, 250);
   };
+
+  const isBuffering = () =>
+    vid.seeking || vid.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
 
   const showSeekIndicator = (direction) => {
     seekIndicator.innerHTML =
@@ -329,6 +335,9 @@ export function createControls({
   vid.addEventListener("pause", () => {
     btnPlay.innerHTML = ICONS.play;
     syncBigButton();
+    // The big play button takes over while paused; a spinner left up from a
+    // seek would sit on top of it.
+    setLoadingState(false);
   });
   vid.addEventListener("playing", () => {
     hasStartedPlayback = true;
@@ -354,8 +363,17 @@ export function createControls({
   });
   vid.addEventListener("ended", () => setLoadingState(false));
   let lastSave = 0;
+  let lastPlaybackTime = vid.currentTime;
 
   vid.addEventListener("timeupdate", () => {
+    // The event-driven show/hide above can miss its hide: after a seek the
+    // browser does not always follow with `playing` or a `canplay` that finds
+    // the element ready. Time actually advancing is proof the spinner is stale.
+    if (vid.currentTime !== lastPlaybackTime && !vid.paused && !isBuffering()) {
+      setLoadingState(false);
+    }
+    lastPlaybackTime = vid.currentTime;
+
     if (Date.now() - lastSave > 4000) {
       saveResumeTime(resumeKey, vid.currentTime);
       lastSave = Date.now();

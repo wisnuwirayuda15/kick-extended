@@ -790,9 +790,10 @@
 				return;
 			}
 			loadingStateTimeout = setTimeout(() => {
-				if (!vid.paused && !vid.ended) loadingOverlay.classList.add("visible");
+				if (!vid.paused && !vid.ended && isBuffering()) loadingOverlay.classList.add("visible");
 			}, 250);
 		};
+		const isBuffering = () => vid.seeking || vid.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
 		const showSeekIndicator = (direction) => {
 			seekIndicator.innerHTML = direction === "forward" ? ICONS.forward : ICONS.backward;
 			seekIndicator.dataset.direction = direction;
@@ -936,6 +937,7 @@
 		vid.addEventListener("pause", () => {
 			btnPlay.innerHTML = ICONS.play;
 			syncBigButton();
+			setLoadingState(false);
 		});
 		vid.addEventListener("playing", () => {
 			hasStartedPlayback = true;
@@ -961,7 +963,10 @@
 		});
 		vid.addEventListener("ended", () => setLoadingState(false));
 		let lastSave = 0;
+		let lastPlaybackTime = vid.currentTime;
 		vid.addEventListener("timeupdate", () => {
+			if (vid.currentTime !== lastPlaybackTime && !vid.paused && !isBuffering()) setLoadingState(false);
+			lastPlaybackTime = vid.currentTime;
 			if (Date.now() - lastSave > 4e3) {
 				saveResumeTime(resumeKey, vid.currentTime);
 				lastSave = Date.now();
