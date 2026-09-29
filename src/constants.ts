@@ -47,6 +47,9 @@ export const LEGACY_STORAGE_PREFIX = "kick_unlocker_";
 /** Remembers that the user prefers the custom player on normal VOD pages. */
 export const AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
 
+/** Set when the user turns SPA navigation off; see native/spa-navigation.ts. */
+export const DISABLE_SPA_KEY = `${STORAGE_PREFIX}disable_spa`;
+
 /**
  * The canonical VOD route. The two merged scripts disagreed: the downloader
  * used an anchored /videos/ regex, while isVodPage also accepted the singular

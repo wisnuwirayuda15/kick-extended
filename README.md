@@ -30,6 +30,9 @@ you use it is your responsibility.
 - **Player switching on normal VODs.** A button in Kick's own control bar swaps
   to the custom player, and the choice is remembered: later visits switch as
   soon as Kick's player appears.
+- **Optional full page loads.** Turn SPA navigation off from the userscript
+  manager's menu and every link on Kick loads a fresh page instead of routing
+  client-side.
 - **Copy stream URL** button in the channel header.
 - **Chat replay** synced to the video position.
 - **Built-in downloader.** The Download button on a VOD page, and the button
@@ -140,7 +143,7 @@ dependencies — rerun it if those colours ever change.
 ## Releasing
 
 Every push and pull request runs lint, type-check and build, and asserts the
-userscript header still carries its five `@grant`s, three `@connect`s, both
+userscript header still carries its seven `@grant`s, three `@connect`s, both
 `@match`es, the hls.js `@require` and the two update URLs.
 
 Pushing a `v*` tag also publishes a release:

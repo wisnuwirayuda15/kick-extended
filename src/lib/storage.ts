@@ -1,5 +1,6 @@
 import {
   AUTO_CUSTOM_KEY,
+  DISABLE_SPA_KEY,
   LEGACY_STORAGE_PREFIX,
   STORAGE_PREFIX,
 } from "../constants.ts";
@@ -90,4 +91,14 @@ export function setPreferCustom() {
 
 export function clearPreferCustom() {
   removeBoth(AUTO_CUSTOM_KEY);
+}
+
+/** Whether the user has turned Kick's client-side navigation off. */
+export function getSpaDisabled() {
+  return localStorage.getItem(DISABLE_SPA_KEY) === "1";
+}
+
+export function setSpaDisabled(disabled: boolean) {
+  if (disabled) localStorage.setItem(DISABLE_SPA_KEY, "1");
+  else localStorage.removeItem(DISABLE_SPA_KEY);
 }

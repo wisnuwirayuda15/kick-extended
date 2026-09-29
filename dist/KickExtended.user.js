@@ -18,7 +18,9 @@
 // @connect      stream.kick.com
 // @grant        GM_addStyle
 // @grant        GM_info
+// @grant        GM_registerMenuCommand
 // @grant        GM_setClipboard
+// @grant        GM_unregisterMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @run-at       document-idle
@@ -60,6 +62,7 @@
 	var STORAGE_PREFIX = "kick_extended_";
 	var LEGACY_STORAGE_PREFIX = "kick_unlocker_";
 	var AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
+	var DISABLE_SPA_KEY = `${STORAGE_PREFIX}disable_spa`;
 	var VOD_PATH_REGEX = /^\/[^/]+\/videos?\/[^/]+\/?$/;
 	var DOWNLOAD_BUTTON_ID = "k-download-btn";
 	var THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
@@ -523,6 +526,13 @@
 	}
 	function clearPreferCustom() {
 		removeBoth(AUTO_CUSTOM_KEY);
+	}
+	function getSpaDisabled() {
+		return localStorage.getItem(DISABLE_SPA_KEY) === "1";
+	}
+	function setSpaDisabled(disabled) {
+		if (disabled) localStorage.setItem(DISABLE_SPA_KEY, "1");
+		else localStorage.removeItem(DISABLE_SPA_KEY);
 	}
 	function showToast(message, duration = 5e3) {
 		document.querySelector("#k-toast")?.remove();
@@ -2101,6 +2111,48 @@
 			anchor.appendChild(button);
 		}
 	}
+	function hardNavigationTarget(event) {
+		if (event.defaultPrevented || event.button !== 0) return null;
+		if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return null;
+		const control = event.target?.closest?.("a[href], button");
+		if (!control || control.tagName !== "A") return null;
+		const anchor = control;
+		if (anchor.hasAttribute("download")) return null;
+		if (anchor.target && anchor.target !== "_self") return null;
+		const url = new URL(anchor.href, window.location.href);
+		if (url.origin !== window.location.origin) return null;
+		if (url.pathname === window.location.pathname && url.search === window.location.search) return null;
+		return url.href;
+	}
+	function installSpaBlocker() {
+		window.addEventListener("click", (event) => {
+			if (!getSpaDisabled()) return;
+			const href = hardNavigationTarget(event);
+			if (!href) return;
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			window.location.assign(href);
+		}, true);
+	}
+	function interceptPushState(url) {
+		if (!getSpaDisabled() || url == null) return false;
+		const next = new URL(String(url), window.location.href);
+		if (next.pathname === window.location.pathname) return false;
+		window.location.assign(next.href);
+		return true;
+	}
+	var menuCommandId = null;
+	function registerSpaMenuCommand() {
+		if (typeof GM_registerMenuCommand !== "function") return;
+		if (menuCommandId !== null && typeof GM_unregisterMenuCommand === "function") GM_unregisterMenuCommand(menuCommandId);
+		const label = getSpaDisabled() ? "SPA navigation: off (click to turn on)" : "SPA navigation: on (click to turn off)";
+		menuCommandId = GM_registerMenuCommand(label, () => {
+			const disabled = !getSpaDisabled();
+			setSpaDisabled(disabled);
+			showToast(disabled ? "Kick Extended: SPA navigation off. Links now load a fresh page." : "Kick Extended: SPA navigation on.");
+			registerSpaMenuCommand();
+		});
+	}
 	console.log(`Kick Extended: userscript loaded (v${GM_info.script.version}), stream-to-disk ${canStreamToDisk() ? "available" : "unavailable"}`);
 	GM_addStyle(styles_default);
 	function destroyCustomPlayer() {
@@ -2153,6 +2205,7 @@
 	["pushState", "replaceState"].forEach((method) => {
 		const original = history[method];
 		history[method] = function(...args) {
+			if (method === "pushState" && interceptPushState(args[2])) return;
 			const returned = original.apply(this, args);
 			onNavigate();
 			return returned;
@@ -2161,6 +2214,8 @@
 	window.addEventListener("popstate", onNavigate);
 	window.addEventListener("hashchange", handleLocationChange);
 	window.addEventListener("pagehide", destroyCustomPlayer);
+	installSpaBlocker();
+	registerSpaMenuCommand();
 	new MutationObserver(() => {
 		handleLocationChange();
 		if (state.activePlayerUi?.vid && !state.activePlayerUi.vid.isConnected) destroyCustomPlayer();

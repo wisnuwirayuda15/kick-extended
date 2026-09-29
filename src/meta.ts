@@ -38,6 +38,10 @@ export const userscript: MonkeyUserScript = {
     "GM_addStyle",
     "GM_setClipboard",
     "GM_info",
+    // The SPA navigation toggle. Unregister is what lets its label follow the
+    // setting; without it every toggle would add another menu entry.
+    "GM_registerMenuCommand",
+    "GM_unregisterMenuCommand",
     // Only reached where a manager does not forward showSaveFilePicker onto the
     // sandboxed window. Declared rather than left to autoGrant so it cannot
     // vanish if that fallback is ever refactored.

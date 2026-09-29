@@ -10,6 +10,11 @@ import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
 import { injectDownloadButton } from "./download/download-button.ts";
 import { canStreamToDisk } from "./download/fs-access.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
+import {
+  installSpaBlocker,
+  interceptPushState,
+  registerSpaMenuCommand,
+} from "./native/spa-navigation.ts";
 
 // The disk-streaming capability is reported at startup rather than assumed:
 // the probe that established it ran under a different @grant set, and the
@@ -109,6 +114,8 @@ function onNavigate() {
 ["pushState", "replaceState"].forEach((method) => {
   const original = history[method];
   history[method] = function (...args) {
+    // With SPA navigation off, a route change becomes a real page load.
+    if (method === "pushState" && interceptPushState(args[2])) return;
     const returned = original.apply(this, args);
     onNavigate();
     return returned;
@@ -117,6 +124,8 @@ function onNavigate() {
 window.addEventListener("popstate", onNavigate);
 window.addEventListener("hashchange", handleLocationChange);
 window.addEventListener("pagehide", destroyCustomPlayer);
+installSpaBlocker();
+registerSpaMenuCommand();
 
 const observer = new MutationObserver(() => {
   handleLocationChange();
