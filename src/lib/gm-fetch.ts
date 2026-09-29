@@ -6,6 +6,7 @@ export function gmFetch(url, opts: any = {}): Promise<any> {
       method: opts.method || "GET",
       url,
       headers: opts.headers || {},
+      data: opts.body,
       timeout: opts.timeout || 15000,
       onload: (r) =>
         resolve({

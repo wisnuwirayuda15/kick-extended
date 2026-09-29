@@ -81,6 +81,7 @@
 				method: opts.method || "GET",
 				url,
 				headers: opts.headers || {},
+				data: opts.body,
 				timeout: opts.timeout || 15e3,
 				onload: (r) => resolve({
 					ok: r.status >= 200 && r.status < 300,
@@ -133,19 +134,95 @@
 			return null;
 		}
 	}
+	function parseStartTime(value) {
+		const text = String(value || "").replace(" ", "T");
+		return new Date(text + (text.endsWith("Z") ? "" : "Z"));
+	}
+	function parseIvsThumbnail(thumbUrl) {
+		const parts = String(thumbUrl || "").split("/");
+		const idx = parts.indexOf("video_thumbnails");
+		if (idx === -1 || idx + 2 >= parts.length) return null;
+		return {
+			sessionId: parts[idx + 1],
+			segmentId: parts[idx + 2]
+		};
+	}
+	async function mintPlaybackUrl(videoId, channelSlug) {
+		try {
+			const res = await gmFetch(`https://web.kick.com/api/v1/stream/${videoId}/playback`, {
+				method: "POST",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json",
+					Origin: "https://kick.com",
+					Referer: "https://kick.com/"
+				},
+				body: JSON.stringify({
+					video_player: {
+						player: {
+							player_name: "web",
+							player_version: "1.0.0",
+							player_software: "IVS Player",
+							player_software_version: "1.28.0"
+						},
+						mux_sdk: { sdk_available: false },
+						pal_sdk: {
+							sdk_available: false,
+							nonce: ""
+						},
+						datazoom_sdk: {
+							sdk_available: false,
+							datazoom_sdk_version: "",
+							om_sdk_version: ""
+						},
+						google_ads_sdk: { sdk_available: false }
+					},
+					video_session: {
+						page_type: "vod",
+						player_remote_played: false,
+						enable_sampling: false,
+						url_path: `/${channelSlug}/videos/${videoId}`,
+						autoplay_behaviour: "auto",
+						play_muted: false,
+						viewer_connection_type: ""
+					},
+					user_session: {
+						session_id: "",
+						player_device_id: "unknown",
+						browser_lang: navigator.language || "en-US",
+						non_personalised_ads: false,
+						ad_targeting: ""
+					}
+				})
+			});
+			if (!res.ok) return null;
+			return res.json()?.playback_url?.vod || null;
+		} catch (e) {
+			return null;
+		}
+	}
+	async function findLegacyThumbnail(channelSlug, startTime) {
+		try {
+			const res = await gmFetch(`https://kick.com/api/v1/channels/${channelSlug}`);
+			if (!res.ok) return "";
+			return (res.json().previous_livestreams || []).find((entry) => parseStartTime(entry.start_time).getTime() === startTime.getTime())?.thumbnail?.src || "";
+		} catch (e) {
+			return "";
+		}
+	}
 	async function findStreamUrlFromMetadata(metadata) {
-		const { video } = metadata;
+		const { video, channelSlug } = metadata;
 		if (!video) return null;
+		const minted = await mintPlaybackUrl(video.id, channelSlug);
+		if (minted) return minted;
+		const startTime = parseStartTime(video.start_time);
 		const thumbUrl = video.thumbnail && video.thumbnail.src ? video.thumbnail.src : "";
-		const thumbParts = thumbUrl.split("/");
-		const idx = thumbParts.indexOf("video_thumbnails");
-		if (idx === -1 || idx + 2 >= thumbParts.length) {
+		const ivs = parseIvsThumbnail(thumbUrl) || parseIvsThumbnail(await findLegacyThumbnail(channelSlug, startTime));
+		if (!ivs) {
 			console.error("Kick Unlocker: Could not parse session/segment from thumbnail", thumbUrl);
 			return null;
 		}
-		const sessionId = thumbParts[idx + 1];
-		const segmentId = thumbParts[idx + 2];
-		const startTime = new Date(video.start_time.replace(" ", "T") + (video.start_time.endsWith("Z") ? "" : "Z"));
+		const { sessionId, segmentId } = ivs;
 		const baseUrls = [
 			"https://stream.kick.com/ivs/v1/196233775518",
 			"https://stream.kick.com/3c81249a5ce0/ivs/v1/196233775518",
