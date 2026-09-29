@@ -542,15 +542,47 @@
 		document.body.appendChild(toast);
 		setTimeout(() => toast.remove(), duration);
 	}
+	var guarding = false;
+	var held = new Map();
+	function isNativeVideo(target) {
+		return target instanceof HTMLVideoElement && target.id !== "k-video";
+	}
+	function hush(video) {
+		if (!guarding) return;
+		if (!held.has(video)) held.set(video, video.muted);
+		video.muted = true;
+		try {
+			video.pause();
+		} catch (e) {}
+	}
+	function onPlay(event) {
+		if (isNativeVideo(event.target)) hush(event.target);
+	}
 	function stopNativePlayback(scope) {
+		guarding = true;
 		(scope || document).querySelectorAll("video").forEach((videoElement) => {
-			if (videoElement.id === "k-video") return;
+			if (!isNativeVideo(videoElement)) return;
+			hush(videoElement);
+			videoElement.addEventListener("play", onPlay);
+			videoElement.addEventListener("playing", onPlay);
 			try {
-				videoElement.pause();
 				videoElement.removeAttribute("src");
 				videoElement.load();
 			} catch (e) {}
 		});
+	}
+	function releaseNativePlayback() {
+		guarding = false;
+		held.forEach((wasMuted, video) => {
+			video.removeEventListener("play", onPlay);
+			video.removeEventListener("playing", onPlay);
+			video.muted = wasMuted;
+		});
+		held.clear();
+	}
+	function installNativePlaybackGuard() {
+		document.addEventListener("play", onPlay, true);
+		document.addEventListener("playing", onPlay, true);
 	}
 	var ICONS = {
 		play: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M8 5v14l11-7z"/></svg>`,
@@ -2182,6 +2214,7 @@
 		document.querySelector("#k-toast")?.remove();
 		document.querySelector("#k-copy-url-btn")?.remove();
 		document.querySelectorAll("[data-kick-unlocker-processing]").forEach((el) => delete el.dataset.kickUnlockerProcessing);
+		releaseNativePlayback();
 		state.nativeExternalCache = null;
 		state.activePlayerUi = null;
 		state.isUnlocking = false;
@@ -2214,6 +2247,7 @@
 	window.addEventListener("popstate", onNavigate);
 	window.addEventListener("hashchange", handleLocationChange);
 	window.addEventListener("pagehide", destroyCustomPlayer);
+	installNativePlaybackGuard();
 	installSpaBlocker();
 	registerSpaMenuCommand();
 	new MutationObserver(() => {

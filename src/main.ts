@@ -7,6 +7,10 @@ import { state } from "./state.ts";
 import { ensureCopyUrlButton } from "./native/copy-url-button.ts";
 import { unlockVideo } from "./player/mount.ts";
 import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
+import {
+  installNativePlaybackGuard,
+  releaseNativePlayback,
+} from "./native/teardown.ts";
 import { injectDownloadButton } from "./download/download-button.ts";
 import { canStreamToDisk } from "./download/fs-access.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
@@ -69,6 +73,9 @@ function destroyCustomPlayer() {
     .querySelectorAll("[data-kick-unlocker-processing]")
     .forEach((el) => delete (el as any).dataset.kickUnlockerProcessing);
 
+  // Kick's player is allowed to make sound again once ours is gone.
+  releaseNativePlayback();
+
   state.nativeExternalCache = null;
   state.activePlayerUi = null;
   state.isUnlocking = false;
@@ -124,6 +131,7 @@ function onNavigate() {
 window.addEventListener("popstate", onNavigate);
 window.addEventListener("hashchange", handleLocationChange);
 window.addEventListener("pagehide", destroyCustomPlayer);
+installNativePlaybackGuard();
 installSpaBlocker();
 registerSpaMenuCommand();
 
