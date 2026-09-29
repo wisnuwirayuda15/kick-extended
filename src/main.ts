@@ -64,8 +64,6 @@ function destroyCustomPlayer() {
     .querySelectorAll("[data-kick-unlocker-processing]")
     .forEach((el) => delete (el as any).dataset.kickUnlockerProcessing);
 
-  clearTimeout(state.autoSwitchTimer);
-  state.autoSwitchTimer = null;
   state.nativeExternalCache = null;
   state.activePlayerUi = null;
   state.isUnlocking = false;
@@ -80,6 +78,10 @@ function handleLocationChange() {
   if (window.location.href === lastHref) return;
   lastHref = window.location.href;
   destroyCustomPlayer();
+  // Per-page, but not per-player: React ripping the player out must not throw
+  // away a stream that is already resolved for the same VOD.
+  state.pendingStream = null;
+  state.prefetchedKey = null;
 }
 
 function runDownloadInjections() {

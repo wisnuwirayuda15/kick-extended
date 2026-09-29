@@ -48,12 +48,6 @@ export const LEGACY_STORAGE_PREFIX = "kick_unlocker_";
 export const AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
 
 /**
- * Kick mounts the <video> long before it is usable, so auto-switching waits
- * for the readiness gate, then settles for this long and re-checks.
- */
-export const AUTO_SWITCH_SETTLE_MS = 700;
-
-/**
  * The canonical VOD route. The two merged scripts disagreed: the downloader
  * used an anchored /videos/ regex, while isVodPage also accepted the singular
  * /video/ form and did not anchor the end. This accepts both spellings and

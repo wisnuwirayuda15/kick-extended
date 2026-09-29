@@ -72,7 +72,8 @@
 		nativeExternalCache: null,
 		isUnlocking: false,
 		activePlayerUi: null,
-		autoSwitchTimer: null,
+		pendingStream: null,
+		prefetchedKey: null,
 		activeDownload: null
 	};
 	function gmFetch(url, opts = {}) {
@@ -253,7 +254,21 @@
 		for (const url of tasks) if (await checkStreamUrl(url)) return url;
 		return null;
 	}
-	async function resolveStream(channelSlug, videoSlug) {
+	function resolveStream(channelSlug, videoSlug) {
+		const key = `${channelSlug}/${videoSlug}`;
+		if (state.pendingStream?.key !== key) {
+			const promise = resolveStreamUncached(channelSlug, videoSlug).then((resolved) => {
+				if (!resolved && state.pendingStream?.promise === promise) state.pendingStream = null;
+				return resolved;
+			});
+			state.pendingStream = {
+				key,
+				promise
+			};
+		}
+		return state.pendingStream.promise;
+	}
+	async function resolveStreamUncached(channelSlug, videoSlug) {
 		try {
 			const result = await getVideoMetadata(channelSlug, videoSlug);
 			if (!result) return null;
@@ -275,12 +290,11 @@
 		if (byId && byId.id !== "k-video") return byId;
 		return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
 	}
-	function isNativePlayerReady() {
+	function isNativePlayerVisible() {
 		const nativeVideo = getNativeVideo();
 		if (!nativeVideo) return false;
 		const rect = nativeVideo.getBoundingClientRect();
-		if (rect.width < 120 || rect.height < 70) return false;
-		return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
+		return rect.width >= 120 && rect.height >= 70;
 	}
 	function findCopyButtonAnchor() {
 		const badge = document.querySelector(BADGE_SELECTOR);
@@ -1320,25 +1334,24 @@
 	function ensureCustomPlayerToggle() {
 		if (!isVodPage() || state.isUnlocking) return;
 		if (document.querySelector("[data-testid=\"video-subscriber-only\"]")) return;
+		const preferCustom = getPreferCustom();
+		if (preferCustom) {
+			const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
+			if (state.prefetchedKey !== cacheKey) {
+				state.prefetchedKey = cacheKey;
+				resolveStream(channelSlug, videoSlug);
+			}
+		}
 		const container = findNativePlayerContainer();
 		if (!container || container.dataset.kickUnlockerProcessing) return;
 		const switchToCustom = () => unlockVideo(null, {
 			explicitContainer: container,
 			manualSwitch: true
 		});
-		if (getPreferCustom()) {
-			if (state.autoSwitchTimer || !isNativePlayerReady()) return;
-			state.autoSwitchTimer = setTimeout(() => {
-				state.autoSwitchTimer = null;
-				if (state.isUnlocking || !isNativePlayerReady()) return;
-				const readyContainer = findNativePlayerContainer();
-				if (!readyContainer || readyContainer.dataset.kickUnlockerProcessing) return;
-				showToast("KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.", 6e3);
-				unlockVideo(null, {
-					explicitContainer: readyContainer,
-					manualSwitch: true
-				});
-			}, 700);
+		if (preferCustom) {
+			if (!isNativePlayerVisible()) return;
+			showToast("KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.", 6e3);
+			switchToCustom();
 			return;
 		}
 		const anchorButton = document.querySelector(CONTROL_ANCHOR_SELECTOR);
@@ -2117,8 +2130,6 @@
 		document.querySelector("#k-toast")?.remove();
 		document.querySelector("#k-copy-url-btn")?.remove();
 		document.querySelectorAll("[data-kick-unlocker-processing]").forEach((el) => delete el.dataset.kickUnlockerProcessing);
-		clearTimeout(state.autoSwitchTimer);
-		state.autoSwitchTimer = null;
 		state.nativeExternalCache = null;
 		state.activePlayerUi = null;
 		state.isUnlocking = false;
@@ -2128,6 +2139,8 @@
 		if (window.location.href === lastHref) return;
 		lastHref = window.location.href;
 		destroyCustomPlayer();
+		state.pendingStream = null;
+		state.prefetchedKey = null;
 	}
 	function runDownloadInjections() {
 		injectDownloadButton();

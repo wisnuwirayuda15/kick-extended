@@ -22,17 +22,16 @@ export function getNativeVideo() {
   return document.querySelector(NATIVE_VIDEO_FALLBACK_SELECTOR);
 }
 
-// Kick renders the <video> tag well before the player is actually usable,
-// so element presence alone is a bad signal. The control bar is no help
-// either: it is only mounted on hover. Size plus readyState is.
-export function isNativePlayerReady() {
+// Kick renders the <video> tag before it is laid out, so element presence
+// alone is a bad signal. The control bar is no help either: it is only
+// mounted on hover. Size is. Waiting for readyState as well only held the
+// auto-switch up until Kick had started loading a stream it was about to lose.
+export function isNativePlayerVisible() {
   const nativeVideo: any = getNativeVideo();
   if (!nativeVideo) return false;
 
   const rect = nativeVideo.getBoundingClientRect();
-  if (rect.width < 120 || rect.height < 70) return false;
-
-  return nativeVideo.readyState >= 1 || Boolean(nativeVideo.currentSrc);
+  return rect.width >= 120 && rect.height >= 70;
 }
 
 export function findCopyButtonAnchor() {

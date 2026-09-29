@@ -1,3 +1,4 @@
+import { state } from "../state.ts";
 import { checkStreamUrl, gmFetch } from "./gm-fetch.ts";
 
 export async function getVideoMetadata(channelSlug, videoSlug) {
@@ -194,7 +195,27 @@ export async function findStreamUrlFromMetadata(metadata) {
   return null;
 }
 
-export async function resolveStream(channelSlug, videoSlug) {
+// One resolve per VOD, shared by every caller. Auto-switch starts it the
+// moment a VOD page is seen, before Kick's player has rendered, so by the time
+// the switch happens the URL is usually already in hand. A failure is not
+// kept, so the next caller tries again.
+export function resolveStream(channelSlug, videoSlug) {
+  const key = `${channelSlug}/${videoSlug}`;
+  if (state.pendingStream?.key !== key) {
+    const promise = resolveStreamUncached(channelSlug, videoSlug).then(
+      (resolved) => {
+        if (!resolved && state.pendingStream?.promise === promise) {
+          state.pendingStream = null;
+        }
+        return resolved;
+      },
+    );
+    state.pendingStream = { key, promise };
+  }
+  return state.pendingStream.promise;
+}
+
+async function resolveStreamUncached(channelSlug, videoSlug) {
   try {
     const result = await getVideoMetadata(channelSlug, videoSlug);
     if (!result) return null;

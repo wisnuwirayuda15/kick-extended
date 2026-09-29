@@ -26,8 +26,13 @@ export const state = {
   /** Handles the global keyboard shortcuts reach into. */
   activePlayerUi: null as any,
 
-  /** Pending auto-switch settle timer. */
-  autoSwitchTimer: null as any,
+  /** In-flight or finished resolveStream, as { key, promise }. Cleared on
+   *  navigation so a signed playback URL is not reused past its lifetime. */
+  pendingStream: null as any,
+
+  /** VOD the auto-switch has already started resolving, so the observer's
+   *  per-mutation calls do not retry a failed resolve in a loop. */
+  prefetchedKey: null as string | null,
 
   /**
    * In-flight VOD download, or null.

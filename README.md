@@ -28,7 +28,8 @@ you use it is your responsibility.
 - **External player handoff.** Copy the stream URL, download an `.m3u`
   playlist, or launch VLC, PotPlayer, IINA or mpv.
 - **Player switching on normal VODs.** A button in Kick's own control bar swaps
-  to the custom player, and the choice is remembered for later visits.
+  to the custom player, and the choice is remembered: later visits switch as
+  soon as Kick's player appears.
 - **Copy stream URL** button in the channel header.
 - **Chat replay** synced to the video position.
 - **Built-in downloader.** The Download button on a VOD page, and the button

@@ -1,5 +1,4 @@
 import {
-  AUTO_SWITCH_SETTLE_MS,
   CONTROL_ANCHOR_SELECTOR,
   SUBSCRIBER_ONLY_SELECTOR,
 } from "../constants.ts";
@@ -15,7 +14,7 @@ import { unlockVideo } from "../player/mount.ts";
 import { state } from "../state.ts";
 import {
   findNativePlayerContainer,
-  isNativePlayerReady,
+  isNativePlayerVisible,
   isVodPage,
 } from "./detect.ts";
 import { getVodSlugs } from "../lib/vod-slugs.ts";
@@ -25,31 +24,32 @@ export function ensureCustomPlayerToggle() {
   // Sub-only pages are handled automatically by the observer below.
   if (document.querySelector(SUBSCRIBER_ONLY_SELECTOR)) return;
 
+  const preferCustom = getPreferCustom();
+  if (preferCustom) {
+    // Start resolving before Kick's player has even rendered, so the switch
+    // below is not held up by the network once it is visible. Once per VOD:
+    // this runs on every mutation, and a failed resolve must not be retried
+    // on each of them.
+    const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
+    if (state.prefetchedKey !== cacheKey) {
+      state.prefetchedKey = cacheKey;
+      resolveStream(channelSlug, videoSlug);
+    }
+  }
+
   const container: any = findNativePlayerContainer();
   if (!container || container.dataset.kickUnlockerProcessing) return;
 
   const switchToCustom = () =>
     unlockVideo(null, { explicitContainer: container, manualSwitch: true });
 
-  if (getPreferCustom()) {
-    if (state.autoSwitchTimer || !isNativePlayerReady()) return;
-    // Let React finish its mount pass before we tear the container down.
-    // Re-check afterwards in case the DOM moved during the wait.
-    state.autoSwitchTimer = setTimeout(() => {
-      state.autoSwitchTimer = null;
-      if (state.isUnlocking || !isNativePlayerReady()) return;
-      const readyContainer: any = findNativePlayerContainer();
-      if (!readyContainer || readyContainer.dataset.kickUnlockerProcessing)
-        return;
-      showToast(
-        "KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.",
-        6000,
-      );
-      unlockVideo(null, {
-        explicitContainer: readyContainer,
-        manualSwitch: true,
-      });
-    }, AUTO_SWITCH_SETTLE_MS);
+  if (preferCustom) {
+    if (!isNativePlayerVisible()) return;
+    showToast(
+      "KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.",
+      6000,
+    );
+    switchToCustom();
     return;
   }
 
