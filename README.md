@@ -171,4 +171,7 @@ The release gets both `KickExtended.user.js` and the header-only
 Based on [KickNoSub](https://github.com/Enmn/KickNoSub) by Enmn, which is
 licensed under Apache-2.0. This is a modified script for userscript version, split into modules and rebuilt with `vite-plugin-monkey`.
 
+Icons are from [Phosphor Icons](https://phosphoricons.com) (fill weight),
+licensed under MIT.
+
 Licensed under [Apache-2.0](LICENSE).

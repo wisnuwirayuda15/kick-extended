@@ -152,7 +152,6 @@ export function createControls({
   // against in the click handler.
   let controlsShownAtGestureStart = false;
   let lastPointerType = "mouse";
-  let touchMode = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
 
   const closeMenus = () =>
     menuWraps.forEach((wrap) => wrap.classList.remove("open"));
@@ -164,26 +163,19 @@ export function createControls({
     wrap.classList.toggle("open", opening);
   };
 
-  // The centre buttons are for touch, where there is nothing to hover and a
-  // tap needs something to land on. Kick's desktop player has none, so with
-  // a mouse they stay hidden.
+  // The ±10s buttons ride with the overlay, for mouse and touch alike.
   const setCenterSeekVisible = (visible) => {
     [btnSeekBack, btnSeekFwd].forEach((button) =>
-      button.classList.toggle("visible", visible && touchMode),
+      button.classList.toggle("visible", visible),
     );
   };
 
-  // On touch the centre button rides with the overlay so there is always
-  // something to tap to pause. With a mouse it only stands in for autoplay
-  // the browser blocked, until playback first starts.
+  // The play button between them shows with the overlay too, and stays up
+  // while paused so there is always something to press.
   const syncBigButton = () => {
     btnBig.innerHTML = vid.paused ? ICONS.bigPlay : ICONS.bigPause;
-    btnBig.classList.toggle(
-      "visible",
-      touchMode
-        ? controlsShown || vid.paused
-        : vid.paused && !hasStartedPlayback,
-    );
+    btnBig.setAttribute("aria-label", vid.paused ? "Play" : "Pause");
+    btnBig.classList.toggle("visible", controlsShown || vid.paused);
   };
 
   const hideControlsNow = () => {
@@ -335,7 +327,6 @@ export function createControls({
   // is toggled by the play button. Mouse clicks keep click-to-play.
   vid.addEventListener("pointerdown", (event) => {
     lastPointerType = event.pointerType || "mouse";
-    if (lastPointerType !== "mouse") touchMode = true;
     controlsShownAtGestureStart = controlsShown;
   });
   let lastTapTime = 0;
@@ -533,6 +524,7 @@ export function createControls({
     if (!vid.paused) controls.style.opacity = "0";
     if (!vid.paused) setCenterSeekVisible(false);
     if (!vid.paused) controlsShown = false;
+    syncBigButton();
   });
   controls.addEventListener("mouseenter", () => {
     pointerOverControls = true;

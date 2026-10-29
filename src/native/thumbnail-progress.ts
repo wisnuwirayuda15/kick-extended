@@ -7,6 +7,7 @@ import {
   THUMB_PROGRESS_FLAG,
   VOD_PATH_REGEX,
 } from "../constants.ts";
+import { icon } from "../icons.ts";
 import {
   clearResumeTime,
   clearWatchProgress,
@@ -115,8 +116,6 @@ function findCardThumbnail(trigger: Element) {
   return null;
 }
 
-const HISTORY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`;
-
 function createMenuItem(menu: Element, href: string) {
   const item = document.createElement("button");
   item.type = "button";
@@ -125,7 +124,7 @@ function createMenuItem(menu: Element, href: string) {
   // Borrowed from Kick's own item, so it looks and hovers like the rest.
   const sibling = menu.querySelector('[role="menuitem"]');
   item.className = `${sibling?.className || ""} ${PROGRESS_MENU_ITEM_CLASS}`;
-  item.innerHTML = `${HISTORY_ICON}<span>Remove watch progress</span>`;
+  item.innerHTML = `${icon("history", 'width="20" height="20" class="inline-block shrink-0"')}<span>Remove watch progress</span>`;
 
   item.addEventListener("click", (event) => {
     event.preventDefault();

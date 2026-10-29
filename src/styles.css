@@ -111,27 +111,41 @@
     padding: 8px 12px 4px; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.5);
 }
 
-/* Centre buttons, shown on touch screens only. */
+/* Centre cluster: play/pause flanked by ±10s, shown with the overlay. Frosted
+   dark circles with a hairline edge, turning Kick green under the pointer. */
 #k-big-play, .k-center-seek {
     position: absolute; top: 50%; z-index: 16; display: flex; align-items: center; justify-content: center;
-    padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer;
-    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);
-    transition: opacity .15s ease, transform .15s ease;
+    padding: 0; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    color: #fff; cursor: pointer;
+    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.9);
+    transition: opacity .15s ease, transform .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
 }
-#k-big-play { left: 50%; width: 64px; height: 64px; }
-#k-big-play svg { width: 32px; height: 32px; }
+#k-big-play { left: 50%; width: 72px; height: 72px; }
+#k-big-play svg { width: 36px; height: 36px; }
 #k-big-play.visible, .k-center-seek.visible {
     opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1);
 }
-.k-center-seek { width: 48px; height: 48px; flex-direction: column; gap: 1px; }
-.k-center-seek svg { width: 18px; height: 18px; flex-shrink: 0; }
-.k-center-seek.bump { transform: translate(-50%, -50%) scale(0.88); transition-duration: .08s; }
-#k-seek-back { left: calc(50% - 88px); }
-#k-seek-fwd { left: calc(50% + 88px); }
+@media (hover: hover) {
+    #k-big-play.visible:hover, .k-center-seek.visible:hover {
+        background: rgba(0, 0, 0, 0.7); border-color: rgba(83, 252, 24, 0.5); color: #53fc18;
+        transform: translate(-50%, -50%) scale(1.06);
+    }
+}
+#k-big-play:focus-visible, .k-center-seek:focus-visible { outline: 2px solid #53fc18; outline-offset: 2px; }
+#k-big-play.visible:active, .k-center-seek.visible.bump {
+    transform: translate(-50%, -50%) scale(0.9); transition-duration: .08s;
+}
+/* While buffering, the spinner takes the play button's place. */
+#k-player:has(#k-loading.visible) #k-big-play { opacity: 0; pointer-events: none; }
+.k-center-seek { width: 56px; height: 56px; flex-direction: column; gap: 2px; }
+.k-center-seek svg { width: 20px; height: 20px; flex-shrink: 0; }
+#k-seek-back { left: calc(50% - 104px); }
+#k-seek-fwd { left: calc(50% + 104px); }
 /* Stacked under the icon, not laid over it: the double arrow fills the
    circle's centre, so a centred label collides with it. */
 .k-center-seek .k-center-seek-label {
-    font-size: 9px; font-weight: 700; line-height: 1; pointer-events: none;
+    font-size: 11px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: none;
 }
 
 #k-loading {
@@ -170,20 +184,25 @@
     #k-controls-row { height: 40px; }
     #k-volume-wrap:hover #k-volume { display: none; }
     #k-time { font-size: 11px; }
-    #k-big-play { width: 56px; height: 56px; }
-    #k-big-play svg { width: 28px; height: 28px; }
-    .k-center-seek { width: 40px; height: 40px; }
-    .k-center-seek svg { width: 14px; height: 14px; }
-    .k-center-seek .k-center-seek-label { font-size: 8px; }
-    #k-seek-back { left: calc(50% - 68px); }
-    #k-seek-fwd { left: calc(50% + 68px); }
+    #k-big-play { width: 60px; height: 60px; }
+    #k-big-play svg { width: 30px; height: 30px; }
+    .k-center-seek { width: 46px; height: 46px; gap: 1px; }
+    .k-center-seek svg { width: 16px; height: 16px; }
+    .k-center-seek .k-center-seek-label { font-size: 10px; }
+    #k-seek-back { left: calc(50% - 84px); }
+    #k-seek-fwd { left: calc(50% + 84px); }
 }
 @container (max-width: 380px) {
     .k-btn { width: 36px; height: 36px; }
     #k-controls-row { height: 36px; padding: 0 4px; }
     #k-time { font-size: 10px; padding-left: 4px; }
-    #k-seek-back { left: calc(50% - 60px); }
-    #k-seek-fwd { left: calc(50% + 60px); }
+    #k-big-play { width: 52px; height: 52px; }
+    #k-big-play svg { width: 26px; height: 26px; }
+    .k-center-seek { width: 40px; height: 40px; }
+    .k-center-seek svg { width: 14px; height: 14px; }
+    .k-center-seek .k-center-seek-label { font-size: 9px; }
+    #k-seek-back { left: calc(50% - 70px); }
+    #k-seek-fwd { left: calc(50% + 70px); }
 }
 
 #k-copy-url-btn {
