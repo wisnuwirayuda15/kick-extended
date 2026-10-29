@@ -9,12 +9,10 @@ export function bindGlobalPlayerListeners() {
   if (globalPlayerListenersBound) return;
 
   document.addEventListener("click", (event) => {
-    [state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach(
-      (wrap) => {
-        if (!wrap || !wrap.isConnected) return;
-        if (!wrap.contains(event.target)) wrap.classList.remove("open");
-      },
-    );
+    (state.activePlayerUi?.menuWraps || []).forEach((wrap) => {
+      if (!wrap.isConnected) return;
+      if (!wrap.contains(event.target)) wrap.classList.remove("open");
+    });
   });
 
   // Player controls keep DOM focus after a click, so the keydown handler

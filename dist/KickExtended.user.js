@@ -49,9 +49,9 @@
 		enumerable: true
 	}) : target, mod));
 	hls_js = __toESM(hls_js);
-	var styles_default = "/* Root player */\n#k-player { background: #000; border-radius: 14px; overflow: hidden; container-type: inline-size; }\n#k-video { width: 100%; height: 100%; object-fit: contain; background: black; }\n#k-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.25); }\n#k-progress { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #53fc18, #9dff57); }\n#k-track-tooltip {\n    position: absolute; bottom: calc(100% + 10px); left: 0;\n    transform: translateX(-50%) scale(0.96); padding: 4px 8px; border-radius: 8px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); color: #fff; font-size: 12px;\n    line-height: 1.2; white-space: nowrap; pointer-events: none; opacity: 0;\n    transition: opacity .12s ease, transform .12s ease; z-index: 35;\n}\n#k-track-tooltip-time { font-variant-numeric: tabular-nums; }\n#k-track-tooltip.visible { opacity: 1; transform: translateX(-50%) scale(1); }\n#k-track:hover { height: 8px; }\n#k-track.scrubbing { height: 8px; }\n#k-progress::after {\n    content: \"\"; position: absolute; right: 0; top: 50%; width: 13px; height: 13px;\n    border-radius: 50%; background: #53fc18; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);\n    transform: translate(50%, -50%) scale(0); transition: transform .12s ease;\n}\n#k-track:hover #k-progress::after,\n#k-track.scrubbing #k-progress::after { transform: translate(50%, -50%) scale(1); }\n#k-time { white-space: nowrap; }\n#k-controls-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n#k-controls-left { display: flex; align-items: center; gap: 15px; min-width: 0; }\n#k-controls-right { display: flex; align-items: center; gap: 15px; flex: 0 0 auto; }\n\n/* The player can be narrow because the phone is narrow, or because the chat\n   pane is open on desktop. A container query catches both.\n   The seek-button overrides are scoped under #k-player because their base\n   rules come later in this file and would otherwise win at equal specificity. */\n@container (max-width: 560px) {\n    #k-controls { padding: 16px 10px 8px 10px; }\n    #k-controls-left, #k-controls-right { gap: 10px; }\n    #k-volume, #k-volume-value { display: none; }\n    #k-time { font-size: 11px; }\n    #k-track { padding: 12px 0; }\n    #k-controls button svg { width: 20px; height: 20px; }\n    #k-quality-btn { padding: 3px 6px; font-size: 11px; }\n    #k-ext-btn { width: 25px; height: 25px; }\n    #k-big-play { width: 58px; height: 58px; }\n    #k-big-play svg { width: 30px; height: 30px; }\n    #k-player .k-center-seek { width: 40px; height: 40px; }\n    #k-player .k-center-seek svg { width: 14px; height: 14px; }\n    #k-player .k-center-seek .k-center-seek-label { font-size: 8px; }\n    #k-player #k-seek-back { left: calc(50% - 68px); }\n    #k-player #k-seek-fwd { left: calc(50% + 68px); }\n}\n@container (max-width: 380px) {\n    #k-time { font-size: 10px; }\n    #k-player #k-seek-back { left: calc(50% - 60px); }\n    #k-player #k-seek-fwd { left: calc(50% + 60px); }\n}\n#k-controls { z-index: 20; }\n#k-controls button { transition: transform .15s ease, opacity .15s ease; }\n#k-controls button:hover { transform: scale(1.15); opacity: 1; }\n#k-big-play {\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease; backdrop-filter: blur(6px);\n    -webkit-backdrop-filter: blur(6px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 16;\n}\n#k-big-play.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }\n.k-center-seek {\n    position: absolute; top: 50%; width: 48px; height: 48px; padding: 0;\n    display: flex; flex-direction: column; gap: 1px; align-items: center; justify-content: center;\n    background: rgba(7, 7, 7, 0.72); border: 1px solid rgba(255, 255, 255, 0.18);\n    border-radius: 50%; color: #fff; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease; z-index: 16;\n}\n.k-center-seek svg { width: 18px; height: 18px; flex-shrink: 0; }\n.k-center-seek.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }\n.k-center-seek.visible:hover { transform: translate(-50%, -50%) scale(1.08); }\n.k-center-seek.bump { transform: translate(-50%, -50%) scale(0.88); transition-duration: .08s; }\n#k-seek-back { left: calc(50% - 88px); }\n#k-seek-fwd { left: calc(50% + 88px); }\n/* Stacked under the icon, not laid over it: the double arrow fills the\n   circle's centre, so a centred label collides with it. */\n.k-center-seek .k-center-seek-label {\n    font-size: 9px; font-weight: 600; line-height: 1; letter-spacing: 0.02em;\n    color: rgba(255, 255, 255, 0.9); pointer-events: none;\n}\n#k-loading {\n    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;\n    background: radial-gradient(circle, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.5));\n    opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 14;\n}\n#k-loading.visible { opacity: 1; }\n.k-loading-spinner {\n    width: 54px; height: 54px; border-radius: 999px; border: 4px solid rgba(255, 255, 255, 0.18);\n    border-top-color: #53fc18; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);\n    animation: kick-unlocker-spin .8s linear infinite;\n}\n@keyframes kick-unlocker-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n#k-seek-indicator {\n    position: absolute; top: 50%; left: 50%; width: 76px; height: 76px; display: flex;\n    align-items: center; justify-content: center; border-radius: 999px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); opacity: 0; pointer-events: none;\n    transform: translate(-50%, -50%) scale(0.92); transition: opacity .15s ease, transform .15s ease; z-index: 15;\n}\n#k-seek-indicator svg { width: 40px; height: 40px; }\n#k-seek-indicator[data-direction=\"backward\"] { left: 34%; }\n#k-seek-indicator[data-direction=\"forward\"] { left: 66%; }\n#k-seek-indicator.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }\n/* Sits inside Kick's own control bar, so it borrows their button classes and\n   only needs a nudge of its own. */\n#k-switch-btn[data-kick-nosub] { cursor: pointer; }\n#k-switch-btn[data-kick-nosub][data-active=\"true\"] { color: #53fc18; }\n#k-native-btn {\n    display: none; align-items: center; justify-content: center; width: 28px; height: 28px;\n    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #fff; border-radius: 8px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n#k-copy-url-btn {\n    display: inline-flex; align-items: center; gap: 5px; vertical-align: middle;\n    margin-left: 8px; padding: 3px 8px; border-radius: 7px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);\n    color: rgba(255, 255, 255, 0.75); font-family: Inter, sans-serif; font-size: 11px;\n    font-weight: 500; line-height: 1.4; white-space: nowrap; cursor: pointer;\n    transition: background .15s ease, color .15s ease;\n}\n#k-copy-url-btn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }\n#k-copy-url-btn[data-state=\"done\"] { color: #53fc18; border-color: rgba(83, 252, 24, 0.4); }\n#k-copy-url-btn[data-state=\"error\"] { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.4); }\n#k-copy-url-btn svg { width: 13px; height: 13px; flex: 0 0 auto; }\n#k-toast {\n    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);\n    z-index: 2147483000; max-width: 90vw; padding: 10px 16px; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.88);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);\n    color: #fff; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.4;\n}\n#k-quality-wrap { position: relative; }\n#k-quality-btn {\n    background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;\n    border-radius: 8px; padding: 4px 8px; font-size: 12px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n#k-quality-menu {\n    position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 92px; max-height: 180px;\n    overflow-y: auto; display: none; flex-direction: column; padding: 6px 0; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 30;\n}\n#k-quality-wrap.open #k-quality-menu { display: flex; }\n#k-quality-menu .k-quality-option {\n    width: 100%; background: transparent; border: 0; color: #fff; border-radius: 0; padding: 7px 12px;\n    font-size: 12px; cursor: pointer; text-align: left; transition: none; opacity: 1;\n}\n#k-quality-menu .k-quality-option:hover { transform: none; opacity: 1; background: rgba(255, 255, 255, 0.08); }\n#k-quality-menu .k-quality-option.active { background: rgba(83, 252, 24, 0.08); color: #53fc18; }\n.k-ext-wrap { position: relative; display: inline-flex; }\n#k-ext-btn {\n    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;\n    padding: 0; background: rgba(10, 10, 10, 0.58); border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #fff; border-radius: 8px; cursor: pointer;\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n}\n.k-ext-menu {\n    position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 190px; max-height: 240px;\n    overflow-y: auto; display: none; flex-direction: column; padding: 6px 0; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.72);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 40;\n    font-family: Inter, sans-serif; text-align: left;\n}\n.k-ext-wrap.open .k-ext-menu { display: flex; }\n.k-ext-menu .k-ext-heading {\n    padding: 6px 12px 4px 12px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;\n    color: rgba(255, 255, 255, 0.45);\n}\n.k-ext-menu .k-ext-option {\n    width: 100%; background: transparent; border: 0; color: #fff; border-radius: 0; padding: 7px 12px;\n    font-size: 12px; font-weight: 400; cursor: pointer; text-align: left; transition: none;\n    opacity: 1; white-space: nowrap;\n}\n.k-ext-menu .k-ext-option:hover { transform: none; opacity: 1; background: rgba(255, 255, 255, 0.08); }\n.k-ext-menu .k-ext-option.done { color: #53fc18; }\n#k-time { min-width: 90px; text-align: center; }\n#k-volume-wrap { display: inline-flex; align-items: center; gap: 5px; }\n#k-volume-btn {\n    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;\n    padding: 0; background: none; border: 0; color: #fff; cursor: pointer; opacity: 0.9;\n}\n#k-volume-btn svg { width: 18px; height: 18px; }\n#k-volume {\n    --k-volume-percent: 100%; width: 96px; height: 8px; padding: 0; border: 0; border-radius: 999px;\n    background: linear-gradient(90deg, #53fc18 0%, #53fc18 var(--k-volume-percent),\n        rgba(7, 7, 7, 0.72) var(--k-volume-percent), rgba(7, 7, 7, 0.72) 100%);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    appearance: none; -webkit-appearance: none; cursor: pointer; overflow: hidden;\n}\n#k-volume::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: transparent; }\n#k-volume::-webkit-slider-thumb {\n    -webkit-appearance: none; appearance: none; width: 0; height: 0; margin-top: 4px;\n    border: 0; border-radius: 0; background: transparent; box-shadow: none;\n}\n#k-volume::-moz-range-track { height: 8px; border-radius: 999px; background: rgba(7, 7, 7, 0.72); }\n#k-volume::-moz-range-progress { height: 8px; border-radius: 999px; background: #53fc18; }\n#k-volume::-moz-range-thumb { width: 0; height: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }\n#k-volume-value { min-width: 34px; color: #ddd; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }\n\n/* Download button on each video thumbnail, revealed on hover.\n   Was injected by KickVideoDownloader through its own <style> tag; it now\n   goes through the same GM_addStyle blob as the rest. */\n.k-thumb-dl-btn {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  z-index: 10;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  font-size: 18px;\n  color: #fff;\n  background: rgba(0, 0, 0, 0.7);\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  opacity: 0;\n  transition: opacity 0.15s ease-out, background 0.15s ease-out;\n}\na:hover > .k-thumb-dl-btn,\n.k-thumb-dl-btn:focus-visible {\n  opacity: 1;\n}\n.k-thumb-dl-btn:hover {\n  background: rgba(0, 0, 0, 0.9);\n}\n\n/* Watch progress along the bottom of a VOD thumbnail. The card clips it to\n   its own rounded corners. */\n.k-thumb-progress {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  z-index: 10;\n  height: 4px;\n  background: rgba(255, 255, 255, 0.35);\n  pointer-events: none;\n}\n.k-thumb-progress > div {\n  height: 100%;\n  background: #53fc18;\n}\n\n/* Download dialog and progress panel.\n   Body-level and fixed, sitting at the same z-index as #k-toast: both must\n   escape #k-player, which is removed on SPA navigation and is the only\n   @container context in this file. */\n#k-download-dialog {\n    position: fixed; inset: 0; z-index: 2147483000; display: flex;\n    align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55);\n    font-family: Inter, sans-serif;\n}\n#k-download-dialog .k-dl-dialog {\n    width: min(420px, 92vw); max-height: 80vh; overflow-y: auto; padding: 16px 18px;\n    border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.18);\n    background: rgba(7, 7, 7, 0.92);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); color: #fff;\n}\n#k-download-dialog .k-dl-heading {\n    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;\n    color: rgba(255, 255, 255, 0.45); margin-bottom: 12px;\n}\n#k-download-dialog .k-dl-note {\n    font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.7);\n    margin-bottom: 12px;\n}\n#k-download-dialog .k-dl-qualities { display: flex; flex-direction: column; gap: 4px; }\n#k-download-dialog .k-dl-quality {\n    width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;\n    border: 1px solid transparent; background: rgba(255, 255, 255, 0.06);\n    color: #fff; font-size: 12px; font-family: inherit; cursor: pointer;\n    transition: background .15s ease;\n}\n#k-download-dialog .k-dl-quality:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }\n#k-download-dialog .k-dl-quality.active {\n    background: rgba(83, 252, 24, 0.08); border-color: rgba(83, 252, 24, 0.4); color: #53fc18;\n}\n#k-download-dialog .k-dl-quality:disabled { opacity: 0.45; cursor: default; }\n#k-download-dialog .k-dl-footer { display: flex; gap: 8px; margin-top: 14px; }\n#k-download-dialog .k-dl-primary,\n#k-download-dialog .k-dl-secondary {\n    padding: 7px 12px; border-radius: 8px; font-size: 12px; font-family: inherit;\n    cursor: pointer; transition: background .15s ease, color .15s ease;\n}\n#k-download-dialog .k-dl-primary {\n    border: 1px solid rgba(83, 252, 24, 0.4); background: rgba(83, 252, 24, 0.12); color: #53fc18;\n}\n#k-download-dialog .k-dl-primary:hover:not(:disabled) { background: rgba(83, 252, 24, 0.2); }\n#k-download-dialog .k-dl-primary:disabled { opacity: 0.5; cursor: default; }\n#k-download-dialog .k-dl-secondary {\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);\n    color: rgba(255, 255, 255, 0.75); margin-left: auto;\n}\n#k-download-dialog .k-dl-secondary:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }\n\n#k-download-panel {\n    position: fixed; right: 18px; bottom: 18px; z-index: 2147483000; width: 300px;\n    padding: 12px 14px; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.92);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);\n    color: #fff; font-family: Inter, sans-serif; font-size: 12px; line-height: 1.4;\n}\n#k-download-panel .k-dl-panel-title {\n    font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n    margin-bottom: 8px;\n}\n#k-download-panel .k-dl-bar {\n    height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.15); overflow: hidden;\n}\n#k-download-panel .k-dl-bar-fill {\n    height: 100%; width: 0%; border-radius: 999px;\n    background: linear-gradient(90deg, #53fc18, #9dff57); transition: width .2s ease;\n}\n#k-download-panel[data-state=\"failed\"] .k-dl-bar-fill { background: #ff6b6b; }\n#k-download-panel .k-dl-panel-detail {\n    margin: 8px 0 10px; color: rgba(255, 255, 255, 0.75);\n    font-variant-numeric: tabular-nums;\n}\n#k-download-panel .k-dl-panel-action {\n    padding: 5px 10px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.18);\n    background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.75);\n    font-size: 11px; font-family: inherit; cursor: pointer;\n}\n#k-download-panel .k-dl-panel-action:hover:not(:disabled) {\n    background: rgba(255, 255, 255, 0.16); color: #fff;\n}\n#k-download-panel .k-dl-panel-action:disabled { opacity: 0.5; cursor: default; }\n";
+	var styles_default = "/* Root player.\n   Styled after Kick's own player: a full-width seek bar over one row of 44px\n   buttons with 20px filled icons, on a gradient that fades up from the bottom,\n   a 12px bold clock, and menus on a black panel. */\n#k-player {\n    position: relative; width: 100%; height: 100%; overflow: hidden; background: #000;\n    color: #fff; font-family: Inter, sans-serif; container-type: inline-size;\n}\n#k-video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }\n\n#k-controls {\n    position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;\n    display: flex; flex-direction: column;\n    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));\n    opacity: 0; transition: opacity .2s ease;\n}\n\n/* Seek bar. The 20px strip is the hit area; the visible bar is the 4px at its\n   bottom, 6px while hovered, and runs edge to edge like Kick's. */\n#k-track {\n    --k-progress: 0%;\n    position: relative; height: 20px; margin-bottom: 8px; cursor: pointer; touch-action: none;\n}\n#k-track-bar {\n    position: absolute; left: 0; right: 0; bottom: 0; height: 4px; overflow: hidden;\n    background: rgba(170, 176, 186, 0.5); transition: height .1s ease;\n}\n#k-track:hover #k-track-bar, #k-track.scrubbing #k-track-bar { height: 6px; }\n#k-buffered, #k-progress { position: absolute; top: 0; left: 0; height: 100%; width: 0; }\n#k-buffered { background: rgba(255, 255, 255, 0.3); }\n#k-progress { background: #53fc18; }\n#k-track::after {\n    content: \"\"; position: absolute; left: var(--k-progress); bottom: 3px;\n    width: 16px; height: 16px; border-radius: 50%; background: #53fc18;\n    transform: translate(-50%, 50%) scale(0); transition: transform .1s ease; pointer-events: none;\n}\n#k-track:hover::after, #k-track.scrubbing::after { transform: translate(-50%, 50%) scale(1); }\n#k-track-tooltip {\n    position: absolute; bottom: calc(100% + 4px); left: 0; z-index: 35;\n    padding: 4px; border-radius: 6px; background: rgba(0, 0, 0, 0.8);\n    font-size: 12px; font-weight: 700; line-height: 16px; font-variant-numeric: tabular-nums;\n    white-space: nowrap; pointer-events: none; opacity: 0;\n    transform: translateX(-50%); transition: opacity .1s ease;\n}\n#k-track-tooltip.visible { opacity: 1; }\n\n/* Button row: 8px side padding, 20px on a wide player. */\n#k-controls-row {\n    display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 8px;\n}\n#k-controls-left, #k-controls-right { display: flex; align-items: center; min-width: 0; }\n#k-controls-right { flex: 0 0 auto; }\n.k-btn {\n    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;\n    width: 44px; height: 44px; padding: 0; border: 0; border-radius: 4px;\n    background: transparent; color: #fff; cursor: pointer; transition: transform .1s ease;\n}\n.k-btn svg { width: 20px; height: 20px; }\n.k-btn:active { transform: scale(0.95); }\n.k-btn:focus-visible { outline: 2px solid #53fc18; outline-offset: -2px; }\n#k-time {\n    padding-left: 8px; font-size: 12px; font-weight: 700; line-height: 16px;\n    white-space: nowrap; font-variant-numeric: tabular-nums;\n}\n\n/* Volume: the slider only opens while the volume control is hovered. */\n#k-volume-wrap { display: flex; align-items: center; gap: 8px; }\n#k-volume {\n    --k-volume-percent: 100%;\n    display: none; width: 100px; height: 20px; margin: 0; padding: 0; border: 0;\n    background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer;\n}\n#k-volume-wrap:hover #k-volume { display: block; }\n#k-volume::-webkit-slider-runnable-track {\n    height: 3px; border-radius: 999px;\n    background: linear-gradient(90deg, #fff var(--k-volume-percent), #24272c var(--k-volume-percent));\n}\n#k-volume::-webkit-slider-thumb {\n    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -6.5px;\n    border: 0; border-radius: 50%; background: #fff;\n}\n#k-volume::-moz-range-track { height: 3px; border-radius: 999px; background: #24272c; }\n#k-volume::-moz-range-progress { height: 3px; border-radius: 999px; background: #fff; }\n#k-volume::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: #fff; }\n\n/* Menus: speed, quality and the external-player handoff, in the player and\n   in Kick's own control bar. */\n.k-menu-wrap, .k-ext-wrap { position: relative; display: inline-flex; }\n.k-menu, .k-ext-menu {\n    position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 40;\n    display: none; flex-direction: column; min-width: 212px; max-height: 280px; overflow-y: auto;\n    padding: 4px; border-radius: 8px; background: rgba(0, 0, 0, 0.9);\n    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);\n    color: #fff; font-family: Inter, sans-serif; font-size: 14px; text-align: left;\n}\n.k-menu-wrap.open .k-menu, .k-ext-wrap.open .k-ext-menu { display: flex; }\n.k-menu-option, .k-ext-menu .k-ext-option {\n    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: 0 0 auto;\n    width: 100%; padding: 8px 12px; border: 0; border-radius: 4px; background: transparent;\n    color: #fff; font-family: inherit; font-size: 14px; font-weight: 400; line-height: 20px;\n    text-align: left; white-space: nowrap; cursor: pointer;\n}\n.k-menu-option:hover, .k-menu-option:focus-visible,\n.k-ext-menu .k-ext-option:hover, .k-ext-menu .k-ext-option:focus-visible {\n    background: rgba(255, 255, 255, 0.1); outline: none;\n}\n.k-menu-option svg { width: 16px; height: 16px; flex: 0 0 auto; visibility: hidden; }\n.k-menu-option.active svg { visibility: visible; }\n.k-ext-menu .k-ext-option.done { color: #53fc18; }\n.k-ext-menu .k-ext-heading {\n    padding: 8px 12px 4px; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.5);\n}\n\n/* Centre buttons, shown on touch screens only. */\n#k-big-play, .k-center-seek {\n    position: absolute; top: 50%; z-index: 16; display: flex; align-items: center; justify-content: center;\n    padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer;\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease;\n}\n#k-big-play { left: 50%; width: 64px; height: 64px; }\n#k-big-play svg { width: 32px; height: 32px; }\n#k-big-play.visible, .k-center-seek.visible {\n    opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1);\n}\n.k-center-seek { width: 48px; height: 48px; flex-direction: column; gap: 1px; }\n.k-center-seek svg { width: 18px; height: 18px; flex-shrink: 0; }\n.k-center-seek.bump { transform: translate(-50%, -50%) scale(0.88); transition-duration: .08s; }\n#k-seek-back { left: calc(50% - 88px); }\n#k-seek-fwd { left: calc(50% + 88px); }\n/* Stacked under the icon, not laid over it: the double arrow fills the\n   circle's centre, so a centred label collides with it. */\n.k-center-seek .k-center-seek-label {\n    font-size: 9px; font-weight: 700; line-height: 1; pointer-events: none;\n}\n\n#k-loading {\n    position: absolute; inset: 0; z-index: 14; display: flex; align-items: center; justify-content: center;\n    opacity: 0; pointer-events: none; transition: opacity .18s ease;\n}\n#k-loading.visible { opacity: 1; }\n.k-loading-spinner {\n    width: 48px; height: 48px; border-radius: 50%;\n    border: 4px solid rgba(255, 255, 255, 0.2); border-top-color: #53fc18;\n    animation: kick-unlocker-spin .8s linear infinite;\n}\n@keyframes kick-unlocker-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n\n/* Keyboard seek feedback. */\n#k-seek-indicator {\n    position: absolute; top: 50%; left: 50%; z-index: 15; display: flex; align-items: center; justify-content: center;\n    width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 0, 0, 0.6);\n    opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(0.92);\n    transition: opacity .15s ease, transform .15s ease;\n}\n#k-seek-indicator svg { width: 28px; height: 28px; }\n#k-seek-indicator[data-direction=\"backward\"] { left: 34%; }\n#k-seek-indicator[data-direction=\"forward\"] { left: 66%; }\n#k-seek-indicator.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }\n\n/* The player can be narrow because the phone is narrow, or because the chat\n   pane is open on desktop. A container query catches both. These come after\n   the base rules above so they win at equal specificity. */\n@container (min-width: 900px) {\n    #k-controls-row { padding: 0 20px; }\n    #k-volume-wrap { gap: 16px; }\n}\n@container (max-width: 560px) {\n    .k-btn { width: 40px; height: 40px; }\n    #k-controls-row { height: 40px; }\n    #k-volume-wrap:hover #k-volume { display: none; }\n    #k-time { font-size: 11px; }\n    #k-big-play { width: 56px; height: 56px; }\n    #k-big-play svg { width: 28px; height: 28px; }\n    .k-center-seek { width: 40px; height: 40px; }\n    .k-center-seek svg { width: 14px; height: 14px; }\n    .k-center-seek .k-center-seek-label { font-size: 8px; }\n    #k-seek-back { left: calc(50% - 68px); }\n    #k-seek-fwd { left: calc(50% + 68px); }\n}\n@container (max-width: 380px) {\n    .k-btn { width: 36px; height: 36px; }\n    #k-controls-row { height: 36px; padding: 0 4px; }\n    #k-time { font-size: 10px; padding-left: 4px; }\n    #k-seek-back { left: calc(50% - 60px); }\n    #k-seek-fwd { left: calc(50% + 60px); }\n}\n\n#k-copy-url-btn {\n    display: inline-flex; align-items: center; gap: 5px; vertical-align: middle;\n    margin-left: 8px; padding: 3px 8px; border-radius: 7px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);\n    color: rgba(255, 255, 255, 0.75); font-family: Inter, sans-serif; font-size: 11px;\n    font-weight: 500; line-height: 1.4; white-space: nowrap; cursor: pointer;\n    transition: background .15s ease, color .15s ease;\n}\n#k-copy-url-btn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }\n#k-copy-url-btn[data-state=\"done\"] { color: #53fc18; border-color: rgba(83, 252, 24, 0.4); }\n#k-copy-url-btn[data-state=\"error\"] { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.4); }\n#k-copy-url-btn svg { width: 13px; height: 13px; flex: 0 0 auto; }\n#k-toast {\n    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);\n    z-index: 2147483000; max-width: 90vw; padding: 10px 16px; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.88);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);\n    color: #fff; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.4;\n}\n\n/* Download button on each video thumbnail, revealed on hover.\n   Was injected by KickVideoDownloader through its own <style> tag; it now\n   goes through the same GM_addStyle blob as the rest. */\n.k-thumb-dl-btn {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  z-index: 10;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  font-size: 18px;\n  color: #fff;\n  background: rgba(0, 0, 0, 0.7);\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  opacity: 0;\n  transition: opacity 0.15s ease-out, background 0.15s ease-out;\n}\na:hover > .k-thumb-dl-btn,\n.k-thumb-dl-btn:focus-visible {\n  opacity: 1;\n}\n.k-thumb-dl-btn:hover {\n  background: rgba(0, 0, 0, 0.9);\n}\n\n/* Watch progress along the bottom of a VOD thumbnail. The card clips it to\n   its own rounded corners. */\n.k-thumb-progress {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  z-index: 10;\n  height: 4px;\n  background: rgba(255, 255, 255, 0.35);\n  pointer-events: none;\n}\n.k-thumb-progress > div {\n  height: 100%;\n  background: #53fc18;\n}\n\n/* Download dialog and progress panel.\n   Body-level and fixed, sitting at the same z-index as #k-toast: both must\n   escape #k-player, which is removed on SPA navigation and is the only\n   @container context in this file. */\n#k-download-dialog {\n    position: fixed; inset: 0; z-index: 2147483000; display: flex;\n    align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55);\n    font-family: Inter, sans-serif;\n}\n#k-download-dialog .k-dl-dialog {\n    width: min(420px, 92vw); max-height: 80vh; overflow-y: auto; padding: 16px 18px;\n    border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.18);\n    background: rgba(7, 7, 7, 0.92);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55); color: #fff;\n}\n#k-download-dialog .k-dl-heading {\n    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;\n    color: rgba(255, 255, 255, 0.45); margin-bottom: 12px;\n}\n#k-download-dialog .k-dl-note {\n    font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.7);\n    margin-bottom: 12px;\n}\n#k-download-dialog .k-dl-qualities { display: flex; flex-direction: column; gap: 4px; }\n#k-download-dialog .k-dl-quality {\n    width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;\n    border: 1px solid transparent; background: rgba(255, 255, 255, 0.06);\n    color: #fff; font-size: 12px; font-family: inherit; cursor: pointer;\n    transition: background .15s ease;\n}\n#k-download-dialog .k-dl-quality:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }\n#k-download-dialog .k-dl-quality.active {\n    background: rgba(83, 252, 24, 0.08); border-color: rgba(83, 252, 24, 0.4); color: #53fc18;\n}\n#k-download-dialog .k-dl-quality:disabled { opacity: 0.45; cursor: default; }\n#k-download-dialog .k-dl-footer { display: flex; gap: 8px; margin-top: 14px; }\n#k-download-dialog .k-dl-primary,\n#k-download-dialog .k-dl-secondary {\n    padding: 7px 12px; border-radius: 8px; font-size: 12px; font-family: inherit;\n    cursor: pointer; transition: background .15s ease, color .15s ease;\n}\n#k-download-dialog .k-dl-primary {\n    border: 1px solid rgba(83, 252, 24, 0.4); background: rgba(83, 252, 24, 0.12); color: #53fc18;\n}\n#k-download-dialog .k-dl-primary:hover:not(:disabled) { background: rgba(83, 252, 24, 0.2); }\n#k-download-dialog .k-dl-primary:disabled { opacity: 0.5; cursor: default; }\n#k-download-dialog .k-dl-secondary {\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08);\n    color: rgba(255, 255, 255, 0.75); margin-left: auto;\n}\n#k-download-dialog .k-dl-secondary:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }\n\n#k-download-panel {\n    position: fixed; right: 18px; bottom: 18px; z-index: 2147483000; width: 300px;\n    padding: 12px 14px; border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(7, 7, 7, 0.92);\n    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);\n    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);\n    color: #fff; font-family: Inter, sans-serif; font-size: 12px; line-height: 1.4;\n}\n#k-download-panel .k-dl-panel-title {\n    font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n    margin-bottom: 8px;\n}\n#k-download-panel .k-dl-bar {\n    height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.15); overflow: hidden;\n}\n#k-download-panel .k-dl-bar-fill {\n    height: 100%; width: 0%; border-radius: 999px;\n    background: linear-gradient(90deg, #53fc18, #9dff57); transition: width .2s ease;\n}\n#k-download-panel[data-state=\"failed\"] .k-dl-bar-fill { background: #ff6b6b; }\n#k-download-panel .k-dl-panel-detail {\n    margin: 8px 0 10px; color: rgba(255, 255, 255, 0.75);\n    font-variant-numeric: tabular-nums;\n}\n#k-download-panel .k-dl-panel-action {\n    padding: 5px 10px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.18);\n    background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.75);\n    font-size: 11px; font-family: inherit; cursor: pointer;\n}\n#k-download-panel .k-dl-panel-action:hover:not(:disabled) {\n    background: rgba(255, 255, 255, 0.16); color: #fff;\n}\n#k-download-panel .k-dl-panel-action:disabled { opacity: 0.5; cursor: default; }\n";
 	var SUBSCRIBER_ONLY_SELECTOR = "[data-testid=\"video-subscriber-only\"]";
-	var CONTROL_ANCHOR_SELECTOR = "[data-testid=\"video-player-clip\"]";
+	var CONTROL_ANCHOR_SELECTOR = "button:has(> svg[data-ds-icon=\"FullscreenExpand\"])";
 	var BADGE_SELECTOR = "svg[data-ds-icon=\"VerifiedBadge\"]";
 	var CHANNEL_NAME_SELECTOR = "h1#channel-username";
 	var NATIVE_VIDEO_SELECTOR = "#video-player";
@@ -61,7 +61,7 @@
 	var KICK_CHAT_SELECTOR = "#chatroom-messages";
 	var STORAGE_PREFIX = "kick_extended_";
 	var LEGACY_STORAGE_PREFIX = "kick_unlocker_";
-	var AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
+	var CUSTOM_PLAYER_OFF_KEY = `${STORAGE_PREFIX}custom_player_off`;
 	var DISABLE_SPA_KEY = `${STORAGE_PREFIX}disable_spa`;
 	var VOD_PATH_REGEX = /^\/[^/]+\/videos?\/[^/]+\/?$/;
 	var DOWNLOAD_BUTTON_ID = "k-download-btn";
@@ -69,6 +69,9 @@
 	var THUMB_INJECTED_FLAG = "kDlInjected";
 	var THUMB_PROGRESS_CLASS = "k-thumb-progress";
 	var THUMB_PROGRESS_FLAG = "kProgressFor";
+	var KICK_MENU_SELECTOR = "[role=\"menu\"][aria-labelledby]";
+	var PROGRESS_MENU_ITEM_CLASS = "k-progress-menu-item";
+	var PROGRESS_MENU_FLAG = "kProgressMenu";
 	var DOWNLOAD_DIALOG_ID = "k-download-dialog";
 	var DOWNLOAD_PANEL_ID = "k-download-panel";
 	var state = {
@@ -79,6 +82,7 @@
 		activePlayerUi: null,
 		pendingStream: null,
 		prefetchedKey: null,
+		customPlayerFailedKey: null,
 		activeDownload: null
 	};
 	function gmFetch(url, opts = {}) {
@@ -225,7 +229,7 @@
 		const thumbUrl = video.thumbnail && video.thumbnail.src ? video.thumbnail.src : "";
 		const ivs = parseIvsThumbnail(thumbUrl) || parseIvsThumbnail(await findLegacyThumbnail(channelSlug, startTime));
 		if (!ivs) {
-			console.error("Kick Unlocker: Could not parse session/segment from thumbnail", thumbUrl);
+			console.error("Kick Extended: Could not parse session/segment from thumbnail", thumbUrl);
 			return null;
 		}
 		const { sessionId, segmentId } = ivs;
@@ -306,6 +310,12 @@
 		if (badge?.parentElement) return badge;
 		return document.querySelector(CHANNEL_NAME_SELECTOR);
 	}
+	function isPageLayout(node) {
+		if (node.tagName === "MAIN") return true;
+		if (node.querySelector("h1#channel-username")) return true;
+		const { overflowY } = getComputedStyle(node);
+		return overflowY === "auto" || overflowY === "scroll";
+	}
 	function findNativePlayerContainer() {
 		const nativeVideo = getNativeVideo();
 		if (!nativeVideo) return null;
@@ -315,6 +325,7 @@
 		let node = nativeVideo.parentElement;
 		let bestMatch = nativeVideo.parentElement;
 		while (node && node !== document.body) {
+			if (isPageLayout(node)) break;
 			const rect = node.getBoundingClientRect();
 			if (rect.width > videoRect.width * 1.15 || rect.height > videoRect.height * 1.3) break;
 			bestMatch = node;
@@ -546,14 +557,15 @@
 			duration
 		}));
 	}
-	function getPreferCustom() {
-		return readMigrated(AUTO_CUSTOM_KEY) === "1";
+	function clearWatchProgress(progressKey) {
+		localStorage.removeItem(progressKey);
 	}
-	function setPreferCustom() {
-		localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+	function isCustomPlayerEnabled() {
+		return localStorage.getItem(CUSTOM_PLAYER_OFF_KEY) !== "1";
 	}
-	function clearPreferCustom() {
-		removeBoth(AUTO_CUSTOM_KEY);
+	function setCustomPlayerEnabled(enabled) {
+		if (enabled) localStorage.removeItem(CUSTOM_PLAYER_OFF_KEY);
+		else localStorage.setItem(CUSTOM_PLAYER_OFF_KEY, "1");
 	}
 	function getSpaDisabled() {
 		return localStorage.getItem(DISABLE_SPA_KEY) === "1";
@@ -612,21 +624,26 @@
 		document.addEventListener("play", onPlay, true);
 		document.addEventListener("playing", onPlay, true);
 	}
+	var filled = (paths) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${paths}</svg>`;
+	var play = filled(`<path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18a1 1 0 0 0 0-1.69L9.54 5.98A.998.998 0 0 0 8 6.82z"/>`);
+	var pause = filled(`<path d="M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z"/>`);
 	var ICONS = {
-		play: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M8 5v14l11-7z"/></svg>`,
-		pause: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-		external: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
-		maximize: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`,
-		settings: `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:white;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
-		bigPlay: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:40px;height:40px;"><path fill="none" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>`,
-		swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;width:18px;height:18px;"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>`,
-		bigPause: `<svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:white;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-		backward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 12 18z"/><path d="M22 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 22 18z"/></svg>`,
-		forward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z"/><path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z"/></svg>`,
-		volumeHigh: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6m3.364 3.364a9 9 0 0 0 0-12.728"/></svg>`,
-		volumeMedium: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM16 9a5 5 0 0 1 0 6"/></svg>`,
-		volumeLow: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/></svg>`,
-		volumeMute: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;"><path fill="none" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298zM22 9l-6 6m0-6l6 6"/></svg>`
+		play,
+		pause,
+		external: filled(`<path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>`),
+		fullscreen: filled(`<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>`),
+		fullscreenExit: filled(`<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>`),
+		speed: filled(`<path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/>`),
+		settings: filled(`<path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>`),
+		check: filled(`<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`),
+		volumeHigh: filled(`<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`),
+		volumeMedium: filled(`<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>`),
+		volumeLow: filled(`<path d="M7 9v6h4l5 5V4l-5 5H7z"/>`),
+		volumeMute: filled(`<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/>`),
+		bigPlay: play,
+		bigPause: pause,
+		backward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 12 18z"/><path d="M22 6a2 2 0 0 0-3.414-1.414l-6 6a2 2 0 0 0 0 2.828l6 6A2 2 0 0 0 22 18z"/></svg>`,
+		forward: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z"/><path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z"/></svg>`
 	};
 	function formatTime(seconds) {
 		if (!isFinite(seconds) || seconds < 0) return "0:00";
@@ -635,6 +652,14 @@
 		const s = Math.floor(seconds % 60);
 		if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 		else return `${m}:${s.toString().padStart(2, "0")}`;
+	}
+	function formatClock(seconds) {
+		const total = isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+		const pad = (value) => String(value).padStart(2, "0");
+		const h = Math.floor(total / 3600);
+		const m = Math.floor(total % 3600 / 60);
+		const s = total % 60;
+		return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 	}
 	function getVolumeIcon(volume) {
 		if (volume <= 0) return ICONS.volumeMute;
@@ -736,12 +761,93 @@
 			menuElement.appendChild(option);
 		});
 	}
+	function buildSplashMarkup(fallbackMinHeight) {
+		return `
+            <div style="width:100%;height:100%;min-height:${fallbackMinHeight}px;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
+                <div style="font-size:18px;color:rgba(255,255,255,0.7);">Loading stream...</div>
+            </div>
+        `;
+	}
+	function buildStreamNotFoundMarkup() {
+		return `
+              <div style="width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
+                  <div style="font-size:20px;color:rgba(255,255,255,0.7);font-weight:bold;">Stream Not Found</div>
+              </div>`;
+	}
+	function buildChatShellMarkup() {
+		return `<div style="display:flex;width:100%;height:100%;"><div id="unlocker-video-area" style="flex:1;background:#000;position:relative;"></div><div id="unlocker-chat-area" style="width:320px;height:100%;border-left:1px solid #333;"></div></div>`;
+	}
+	function buildPlayerMarkup() {
+		return `
+            <div id="k-player">
+                <video id="k-video" playsinline></video>
+                <div id="k-loading" class="visible" aria-hidden="true">
+                    <div class="k-loading-spinner"></div>
+                </div>
+                <div id="k-controls">
+                    <div id="k-track">
+                        <div id="k-track-tooltip">
+                            <div id="k-track-tooltip-time">00:00</div>
+                        </div>
+                        <div id="k-track-bar">
+                            <div id="k-buffered"></div>
+                            <div id="k-progress"></div>
+                        </div>
+                    </div>
+                    <div id="k-controls-row">
+                        <div id="k-controls-left">
+                            <button id="k-play" class="k-btn" type="button" aria-label="Play">${ICONS.play}</button>
+                            <div id="k-volume-wrap">
+                                <button id="k-volume-btn" class="k-btn" type="button" aria-label="Mute">${ICONS.volumeHigh}</button>
+                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
+                            </div>
+                            <span id="k-time">00:00 / 00:00</span>
+                        </div>
+                        <div id="k-controls-right">
+                            <div id="k-ext-wrap" class="k-ext-wrap k-menu-wrap">
+                                <button id="k-ext-btn" class="k-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
+                                <div id="k-ext-menu" class="k-ext-menu k-menu"></div>
+                            </div>
+                            <button id="k-fs" class="k-btn" type="button" title="Fullscreen" aria-label="Fullscreen">${ICONS.fullscreen}</button>
+                            <div id="k-speed-wrap" class="k-menu-wrap">
+                                <button id="k-speed-btn" class="k-btn" type="button" title="Playback speed" aria-label="Playback speed">${ICONS.speed}</button>
+                                <div id="k-speed-menu" class="k-menu"></div>
+                            </div>
+                            <div id="k-quality-wrap" class="k-menu-wrap">
+                                <button id="k-quality-btn" class="k-btn" type="button" title="Quality" aria-label="Quality">${ICONS.settings}</button>
+                                <div id="k-quality-menu" class="k-menu"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="k-seek-indicator" aria-hidden="true"></div>
+                <button id="k-seek-back" class="k-center-seek" type="button" title="Rewind 10 seconds" aria-label="Rewind 10 seconds">
+                    ${ICONS.backward}<span class="k-center-seek-label">10</span>
+                </button>
+                <button id="k-big-play" type="button" aria-label="Play">
+                    ${ICONS.bigPlay}
+                </button>
+                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Forward 10 seconds" aria-label="Forward 10 seconds">
+                    ${ICONS.forward}<span class="k-center-seek-label">10</span>
+                </button>
+            </div>
+        `;
+	}
+	function buildMenuOption(label) {
+		const option = document.createElement("button");
+		option.type = "button";
+		option.className = "k-menu-option";
+		option.setAttribute("role", "menuitemradio");
+		option.innerHTML = `<span></span>${ICONS.check}`;
+		option.querySelector("span").textContent = label;
+		return option;
+	}
 	var globalPlayerListenersBound = false;
 	function bindGlobalPlayerListeners() {
 		if (globalPlayerListenersBound) return;
 		document.addEventListener("click", (event) => {
-			[state.activePlayerUi?.qualWrap, state.activePlayerUi?.extWrap].forEach((wrap) => {
-				if (!wrap || !wrap.isConnected) return;
+			(state.activePlayerUi?.menuWraps || []).forEach((wrap) => {
+				if (!wrap.isConnected) return;
 				if (!wrap.contains(event.target)) wrap.classList.remove("open");
 			});
 		});
@@ -806,25 +912,26 @@
 		}, true);
 		globalPlayerListenersBound = true;
 	}
-	function createControls({ videoParent, manualSwitch, resumeKey, progressKey, playerSettingsKey, savedPlayerSettings, streamUrl, result, chatController }) {
+	var PLAYBACK_RATES = [
+		.25,
+		.5,
+		.75,
+		1,
+		1.25,
+		1.5,
+		2
+	];
+	function createControls({ videoParent, replaceNative, resumeKey, progressKey, playerSettingsKey, savedPlayerSettings, streamUrl, result, chatController }) {
 		const pRoot = videoParent.querySelector("#k-player");
 		const vid = videoParent.querySelector("#k-video");
 		const controls = videoParent.querySelector("#k-controls");
 		const btnPlay = videoParent.querySelector("#k-play");
 		const btnFs = videoParent.querySelector("#k-fs");
-		const btnNative = videoParent.querySelector("#k-native-btn");
-		if (manualSwitch && btnNative) {
-			btnNative.style.display = "inline-flex";
-			btnNative.addEventListener("click", (event) => {
-				event.stopPropagation();
-				clearPreferCustom();
-				window.location.reload();
-			});
-		}
 		const btnBig = videoParent.querySelector("#k-big-play");
 		const btnSeekBack = videoParent.querySelector("#k-seek-back");
 		const btnSeekFwd = videoParent.querySelector("#k-seek-fwd");
 		const progressBar = videoParent.querySelector("#k-progress");
+		const bufferedBar = videoParent.querySelector("#k-buffered");
 		const track = videoParent.querySelector("#k-track");
 		const trackTooltip = videoParent.querySelector("#k-track-tooltip");
 		const trackTooltipTime = videoParent.querySelector("#k-track-tooltip-time");
@@ -835,12 +942,19 @@
 		const extMenu = videoParent.querySelector("#k-ext-menu");
 		const qualBtn = videoParent.querySelector("#k-quality-btn");
 		const qualMenu = videoParent.querySelector("#k-quality-menu");
+		const speedWrap = videoParent.querySelector("#k-speed-wrap");
+		const speedBtn = videoParent.querySelector("#k-speed-btn");
+		const speedMenu = videoParent.querySelector("#k-speed-menu");
+		const menuWraps = [
+			extWrap,
+			speedWrap,
+			qualWrap
+		];
 		const seekIndicator = videoParent.querySelector("#k-seek-indicator");
 		const loadingOverlay = videoParent.querySelector("#k-loading");
 		const volumeWrap = videoParent.querySelector("#k-volume-wrap");
 		const volumeButton = videoParent.querySelector("#k-volume-btn");
 		const volumeSlider = videoParent.querySelector("#k-volume");
-		const volumeValue = videoParent.querySelector("#k-volume-value");
 		const initialVolume = Number.isFinite(savedPlayerSettings.volume) ? savedPlayerSettings.volume : 1;
 		let seekIndicatorTimeout = null;
 		let hasStartedPlayback = false;
@@ -849,9 +963,8 @@
 		const updateVolumeSliderVisual = (volume) => {
 			const percent = Math.max(0, Math.min(100, Math.round(volume * 100)));
 			volumeSlider.style.setProperty("--k-volume-percent", `${percent}%`);
-			volumeValue.textContent = `${percent}%`;
 			volumeButton.innerHTML = getVolumeIcon(volume);
-			volumeButton.setAttribute("aria-label", percent === 0 ? "Unmute volume" : "Mute volume");
+			volumeButton.setAttribute("aria-label", percent === 0 ? "Unmute" : "Mute");
 			volumeWrap.dataset.muted = percent === 0 ? "true" : "false";
 		};
 		const applyVolume = (volume, { persist = true } = {}) => {
@@ -896,20 +1009,26 @@
 		let controlsShownAtGestureStart = false;
 		let lastPointerType = "mouse";
 		let touchMode = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+		const closeMenus = () => menuWraps.forEach((wrap) => wrap.classList.remove("open"));
+		const isAnyMenuOpen = () => menuWraps.some((wrap) => wrap.classList.contains("open"));
+		const toggleMenu = (wrap) => {
+			const opening = !wrap.classList.contains("open");
+			closeMenus();
+			wrap.classList.toggle("open", opening);
+		};
 		const setCenterSeekVisible = (visible) => {
-			[btnSeekBack, btnSeekFwd].forEach((button) => button.classList.toggle("visible", visible));
+			[btnSeekBack, btnSeekFwd].forEach((button) => button.classList.toggle("visible", visible && touchMode));
 		};
 		const syncBigButton = () => {
 			btnBig.innerHTML = vid.paused ? ICONS.bigPlay : ICONS.bigPause;
-			btnBig.classList.toggle("visible", touchMode ? controlsShown || vid.paused : vid.paused);
+			btnBig.classList.toggle("visible", touchMode ? controlsShown || vid.paused : vid.paused && !hasStartedPlayback);
 		};
 		const hideControlsNow = () => {
 			clearTimeout(controlsHideTimeout);
 			controls.style.opacity = "0";
 			setCenterSeekVisible(false);
 			trackTooltip.classList.remove("visible");
-			qualWrap.classList.remove("open");
-			extWrap.classList.remove("open");
+			closeMenus();
 			controlsShown = false;
 			syncBigButton();
 			if (document.fullscreenElement) pRoot.style.cursor = "none";
@@ -919,8 +1038,7 @@
 			controlsHideTimeout = setTimeout(() => {
 				if (vid.paused) return;
 				if (pointerOverControls) return;
-				if (qualWrap.classList.contains("open")) return;
-				if (extWrap.classList.contains("open")) return;
+				if (isAnyMenuOpen()) return;
 				hideControlsNow();
 			}, CONTROLS_HIDE_DELAY);
 		};
@@ -952,9 +1070,9 @@
 		state.activePlayerUi = {
 			vid,
 			pRoot,
-			qualWrap,
-			extWrap,
+			menuWraps,
 			btnFs,
+			replacedNative: replaceNative,
 			showSeekIndicator,
 			showControls,
 			renderProgress: (time) => renderProgress(time),
@@ -966,14 +1084,32 @@
 		populateExternalMenu(extMenu, buildExternalTargets(streamUrl, makeVideoTitle(result)), () => extWrap.classList.remove("open"));
 		extBtn.addEventListener("click", (event) => {
 			event.stopPropagation();
-			qualWrap.classList.remove("open");
-			extWrap.classList.toggle("open");
+			toggleMenu(extWrap);
 		});
 		qualBtn.addEventListener("click", (e) => {
 			e.stopPropagation();
-			extWrap.classList.remove("open");
-			qualWrap.classList.toggle("open");
+			toggleMenu(qualWrap);
 		});
+		speedBtn.addEventListener("click", (event) => {
+			event.stopPropagation();
+			toggleMenu(speedWrap);
+		});
+		const speedOptions = PLAYBACK_RATES.map((rate) => {
+			const option = buildMenuOption(`${rate}x`);
+			option.addEventListener("click", (event) => {
+				event.stopPropagation();
+				vid.playbackRate = rate;
+				closeMenus();
+			});
+			speedMenu.appendChild(option);
+			return {
+				rate,
+				option
+			};
+		});
+		const syncSpeedMenu = () => speedOptions.forEach(({ rate, option }) => option.classList.toggle("active", rate === vid.playbackRate));
+		vid.addEventListener("ratechange", syncSpeedMenu);
+		syncSpeedMenu();
 		volumeSlider.addEventListener("input", () => {
 			applyVolume(parseFloat(volumeSlider.value));
 		});
@@ -1016,16 +1152,19 @@
 		btnBig.addEventListener("click", togglePlay);
 		vid.addEventListener("play", () => {
 			btnPlay.innerHTML = ICONS.pause;
+			btnPlay.setAttribute("aria-label", "Pause");
 			syncBigButton();
 		});
 		vid.addEventListener("pause", () => {
 			btnPlay.innerHTML = ICONS.play;
+			btnPlay.setAttribute("aria-label", "Play");
 			syncBigButton();
 			setLoadingState(false);
 		});
 		vid.addEventListener("playing", () => {
 			hasStartedPlayback = true;
 			setLoadingState(false);
+			syncBigButton();
 		});
 		vid.addEventListener("waiting", () => {
 			if (!vid.paused) setLoadingState(true);
@@ -1064,9 +1203,19 @@
 		});
 		const renderProgress = (time) => {
 			if (!isFinite(vid.duration)) return;
-			progressBar.style.width = time / vid.duration * 100 + "%";
-			timeDisplay.textContent = `${formatTime(time)} / ${formatTime(vid.duration)}`;
+			const percent = `${time / vid.duration * 100}%`;
+			progressBar.style.width = percent;
+			track.style.setProperty("--k-progress", percent);
+			timeDisplay.textContent = `${formatClock(time)} / ${formatClock(vid.duration)}`;
 		};
+		const renderBuffered = () => {
+			if (!isFinite(vid.duration) || vid.duration <= 0) return;
+			let end = 0;
+			for (let i = 0; i < vid.buffered.length; i++) if (vid.buffered.start(i) <= vid.currentTime + .5) end = Math.max(end, vid.buffered.end(i));
+			bufferedBar.style.width = `${Math.min(end / vid.duration, 1) * 100}%`;
+		};
+		vid.addEventListener("progress", renderBuffered);
+		vid.addEventListener("timeupdate", renderBuffered);
 		let isScrubbing = false;
 		let scrubPointerId = null;
 		const ratioFromPointer = (clientX) => {
@@ -1078,7 +1227,7 @@
 			const ratio = ratioFromPointer(clientX);
 			const rect = track.getBoundingClientRect();
 			renderProgress(ratio * vid.duration);
-			trackTooltipTime.textContent = formatTime(ratio * vid.duration);
+			trackTooltipTime.textContent = formatClock(ratio * vid.duration);
 			trackTooltip.style.left = `${ratio * rect.width}px`;
 			trackTooltip.classList.add("visible");
 			return ratio;
@@ -1120,7 +1269,7 @@
 			if (isScrubbing || !isFinite(vid.duration)) return;
 			const rect = track.getBoundingClientRect();
 			const ratio = ratioFromPointer(e.clientX);
-			trackTooltipTime.textContent = formatTime(ratio * vid.duration);
+			trackTooltipTime.textContent = formatClock(ratio * vid.duration);
 			trackTooltip.style.left = `${ratio * rect.width}px`;
 			trackTooltip.classList.add("visible");
 		});
@@ -1134,8 +1283,7 @@
 		pRoot.addEventListener("mousemove", () => showControls());
 		pRoot.addEventListener("mouseleave", () => {
 			clearTimeout(controlsHideTimeout);
-			qualWrap.classList.remove("open");
-			extWrap.classList.remove("open");
+			closeMenus();
 			trackTooltip.classList.remove("visible");
 			pRoot.style.cursor = "";
 			if (!vid.paused) controls.style.opacity = "0";
@@ -1153,7 +1301,13 @@
 		vid.addEventListener("play", () => scheduleControlsHide());
 		vid.addEventListener("pause", () => showControls({ keepOpen: true }));
 		document.addEventListener("fullscreenchange", () => {
-			if (pRoot.isConnected) showControls();
+			if (!pRoot.isConnected) return;
+			const isFullscreen = document.fullscreenElement === pRoot;
+			btnFs.innerHTML = isFullscreen ? ICONS.fullscreenExit : ICONS.fullscreen;
+			const label = isFullscreen ? "Exit fullscreen" : "Fullscreen";
+			btnFs.title = label;
+			btnFs.setAttribute("aria-label", label);
+			showControls();
 		});
 		btnFs.addEventListener("click", () => {
 			if (!document.fullscreenElement) pRoot.requestFullscreen();
@@ -1171,72 +1325,9 @@
 			setLoadingState
 		};
 	}
-	function buildSplashMarkup(fallbackMinHeight) {
-		return `
-            <div style="width:100%;height:100%;min-height:${fallbackMinHeight}px;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
-                <div style="font-size:18px;color:rgba(255,255,255,0.7);">Loading stream...</div>
-            </div>
-        `;
-	}
-	function buildStreamNotFoundMarkup() {
-		return `
-              <div style="width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Inter,sans-serif;">
-                  <div style="font-size:20px;color:rgba(255,255,255,0.7);font-weight:bold;">Stream Not Found</div>
-              </div>`;
-	}
-	function buildChatShellMarkup() {
-		return `<div style="display:flex;width:100%;height:100%;"><div id="unlocker-video-area" style="flex:1;background:#000;position:relative;"></div><div id="unlocker-chat-area" style="width:320px;height:100%;border-left:1px solid #333;"></div></div>`;
-	}
-	function buildPlayerMarkup() {
-		return `
-            <div id="k-player" style="width:100%;height:100%;position:relative;background:black;overflow:hidden;font-family:Inter,sans-serif;">
-                <video id="k-video" playsinline style="width:100%;height:100%;object-fit:contain;"></video>
-                <div id="k-loading" class="visible" aria-hidden="true">
-                    <div class="k-loading-spinner"></div>
-                </div>
-                <div id="k-controls" style="position:absolute;bottom:0;left:0;width:100%;padding:20px 15px 10px 15px;background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);display:flex;flex-direction:column;opacity:0;transition:opacity 0.2s;">
-                    <div id="k-track" style="width:100%;height:5px;padding:8px 0;background:rgba(255,255,255,0.3);background-clip:content-box;box-sizing:content-box;cursor:pointer;position:relative;margin-bottom:4px;border-radius:2px;">
-                        <div id="k-track-tooltip">
-                            <div id="k-track-tooltip-time">0:00</div>
-                        </div>
-                         <div id="k-progress" style="width:0%;height:100%;background:#53fc18;position:relative;border-radius:2px;"></div>
-                    </div>
-                    <div id="k-controls-row">
-                        <div id="k-controls-left">
-                            <button id="k-play" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.play}</button>
-                            <span id="k-time" style="font-size:13px;color:#ddd;font-variant-numeric:tabular-nums;">0:00 / 0:00</span>
-                            <div id="k-volume-wrap">
-                                <button id="k-volume-btn" type="button" aria-label="Mute volume">${ICONS.volumeHigh}</button>
-                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1">
-                                <span id="k-volume-value">100%</span>
-                            </div>
-                        </div>
-                        <div id="k-controls-right">
-                            <button id="k-native-btn" type="button" title="Kembali ke player Kick">${ICONS.swap}</button>
-                            <div id="k-ext-wrap" class="k-ext-wrap">
-                                <button id="k-ext-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
-                                <div id="k-ext-menu" class="k-ext-menu"></div>
-                            </div>
-                            <div id="k-quality-wrap">
-                                <button id="k-quality-btn" type="button">Auto ▴</button>
-                                <div id="k-quality-menu"></div>
-                            </div>
-                            <button id="k-fs" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.maximize}</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="k-seek-indicator" aria-hidden="true"></div>
-                <button id="k-seek-back" class="k-center-seek" type="button" title="Mundur 10 detik" aria-label="Mundur 10 detik">
-                    ${ICONS.backward}<span class="k-center-seek-label">10</span>
-                </button>
-                <button id="k-big-play" style="position:absolute;top:50%;left:50%;width:70px;height:70px;background:rgba(7,7,7,0.72);border-radius:50%;border:1px solid rgba(255,255,255,0.18);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                    ${ICONS.bigPlay}
-                </button>
-                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Maju 10 detik" aria-label="Maju 10 detik">
-                    ${ICONS.forward}<span class="k-center-seek-label">10</span>
-                </button>
-            </div>
-        `;
+	function qualityLabel$1(level) {
+		const fps = Math.round(level.frameRate || 0);
+		return `${level.height}p${fps > 30 ? fps : ""}`;
 	}
 	function setupPlayback({ vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState }, { finalUrl, resumeKey, playerSettingsKey, savedPlayerSettings }) {
 		if (hls_js.default.isSupported()) {
@@ -1253,17 +1344,14 @@
 				setLoadingState(false);
 				const setQuality = (level, label, optionRef = null, qualitySettings = null) => {
 					hls.currentLevel = level;
-					qualBtn.textContent = `${label} ▴`;
-					[...qualMenu.querySelectorAll(".k-quality-option")].forEach((option) => option.classList.remove("active"));
+					qualBtn.title = `Quality: ${label}`;
+					[...qualMenu.querySelectorAll(".k-menu-option")].forEach((option) => option.classList.remove("active"));
 					if (optionRef) optionRef.classList.add("active");
 					if (qualitySettings) savePlayerSettings(playerSettingsKey, { quality: qualitySettings });
 					qualWrap.classList.remove("open");
 				};
 				const addQualityItem = (level, label, qualitySettings, isActive = false) => {
-					const item = document.createElement("button");
-					item.type = "button";
-					item.className = "k-quality-option";
-					item.textContent = label;
+					const item = buildMenuOption(label);
 					if (isActive) item.classList.add("active");
 					item.addEventListener("click", (e) => {
 						e.stopPropagation();
@@ -1281,8 +1369,8 @@
 					qualityItems.push({
 						height: lvl.height,
 						level: idx,
-						label: `${lvl.height}p`,
-						element: addQualityItem(idx, `${lvl.height}p`, {
+						label: qualityLabel$1(lvl),
+						element: addQualityItem(idx, qualityLabel$1(lvl), {
 							mode: "manual",
 							height: lvl.height
 						})
@@ -1315,11 +1403,11 @@
 		} else if (vid.canPlayType("application/vnd.apple.mpegurl")) vid.src = finalUrl;
 	}
 	async function unlockVideo(triggerElement, options = {}) {
-		const { explicitContainer = null, manualSwitch = false } = options;
+		const { explicitContainer = null, replaceNative = false } = options;
 		if (state.isUnlocking) return;
 		const container = explicitContainer || triggerElement?.closest(".relative.flex.flex-col") || null;
 		if (!container || container.dataset.kickUnlockerProcessing) return;
-		const { channelSlug, videoSlug } = getVodSlugs();
+		const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 		const resumeKey = getResumeKey(channelSlug, videoSlug);
 		const progressKey = getProgressKey(channelSlug, videoSlug);
 		const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
@@ -1327,11 +1415,11 @@
 		state.isUnlocking = true;
 		try {
 			let prefetched = null;
-			if (manualSwitch) {
+			if (replaceNative) {
 				prefetched = await resolveStream(channelSlug, videoSlug);
 				if (!prefetched) {
-					clearPreferCustom();
-					showToast("KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.");
+					state.customPlayerFailedKey = cacheKey;
+					showToast("Kick Extended: stream not found, staying on Kick's player for this VOD.");
 					return;
 				}
 			}
@@ -1376,7 +1464,7 @@
 			videoParent.innerHTML = buildPlayerMarkup();
 			const { vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState } = createControls({
 				videoParent,
-				manualSwitch,
+				replaceNative,
 				resumeKey,
 				progressKey,
 				playerSettingsKey,
@@ -1405,58 +1493,74 @@
 			state.isUnlocking = false;
 		}
 	}
-	function ensureCustomPlayerToggle() {
+	var commands = [];
+	var registeredIds = [];
+	function render$1() {
+		if (typeof GM_registerMenuCommand !== "function") return;
+		if (registeredIds.length) {
+			if (typeof GM_unregisterMenuCommand !== "function") return;
+			registeredIds.forEach((id) => GM_unregisterMenuCommand(id));
+		}
+		registeredIds = commands.map((command) => GM_registerMenuCommand(command.label(), () => {
+			command.run();
+			render$1();
+		}));
+	}
+	function addMenuCommand(command) {
+		commands.push(command);
+		render$1();
+	}
+	function ensureCustomPlayer() {
 		if (!isVodPage() || state.isUnlocking) return;
 		if (document.querySelector("[data-testid=\"video-subscriber-only\"]")) return;
-		const preferCustom = getPreferCustom();
-		if (preferCustom) {
-			const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
-			if (state.prefetchedKey !== cacheKey) {
-				state.prefetchedKey = cacheKey;
-				resolveStream(channelSlug, videoSlug);
-			}
+		if (!isCustomPlayerEnabled()) {
+			ensureNativeExternalButton();
+			return;
+		}
+		const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
+		if (state.customPlayerFailedKey === cacheKey) {
+			ensureNativeExternalButton();
+			return;
+		}
+		if (state.prefetchedKey !== cacheKey) {
+			state.prefetchedKey = cacheKey;
+			resolveStream(channelSlug, videoSlug);
 		}
 		const container = findNativePlayerContainer();
 		if (!container || container.dataset.kickUnlockerProcessing) return;
-		const switchToCustom = () => unlockVideo(null, {
+		if (!isNativePlayerVisible()) return;
+		unlockVideo(null, {
 			explicitContainer: container,
-			manualSwitch: true
+			replaceNative: true
 		});
-		if (preferCustom) {
-			if (!isNativePlayerVisible()) return;
-			showToast("KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.", 6e3);
-			switchToCustom();
-			return;
-		}
+	}
+	function registerCustomPlayerMenuCommand() {
+		addMenuCommand({
+			label: () => isCustomPlayerEnabled() ? "Custom player: on (click to turn off)" : "Custom player: off (click to turn on)",
+			run: () => {
+				const enabled = !isCustomPlayerEnabled();
+				setCustomPlayerEnabled(enabled);
+				if (enabled) {
+					showToast("Kick Extended: custom player on.");
+					ensureCustomPlayer();
+					return;
+				}
+				showToast("Kick Extended: custom player off. Subscriber-only VODs still use it.");
+				if (state.activePlayerUi?.replacedNative) window.location.reload();
+			}
+		});
+	}
+	function ensureNativeExternalButton() {
 		const anchorButton = document.querySelector(CONTROL_ANCHOR_SELECTOR);
 		if (!anchorButton || !anchorButton.parentElement) return;
-		if (anchorButton.parentElement.querySelector("#k-switch-btn")) return;
-		const switchButton = document.createElement("button");
-		switchButton.id = "k-switch-btn";
-		switchButton.type = "button";
-		switchButton.dataset.kickNosub = "true";
-		switchButton.title = "Ganti ke player KickNoSub";
-		switchButton.setAttribute("aria-label", "Ganti ke player KickNoSub");
-		switchButton.className = anchorButton.className;
-		switchButton.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>`;
-		switchButton.addEventListener("click", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			setPreferCustom();
-			switchToCustom();
-		});
-		anchorButton.parentElement.insertBefore(switchButton, anchorButton);
-		injectNativeExternalButton(anchorButton, switchButton);
-	}
-	function injectNativeExternalButton(anchorButton, switchButton) {
 		if (anchorButton.parentElement.querySelector("#k-native-ext-wrap")) return;
 		const wrap = document.createElement("div");
 		wrap.id = "k-native-ext-wrap";
 		wrap.className = "k-ext-wrap";
 		const button = document.createElement("button");
 		button.type = "button";
-		button.title = "Buka di player eksternal";
-		button.setAttribute("aria-label", "Buka di player eksternal");
+		button.title = "Open in external player";
+		button.setAttribute("aria-label", "Open in external player");
 		button.className = anchorButton.className;
 		button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
 		const menu = document.createElement("div");
@@ -1472,10 +1576,10 @@
 			const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
 			wrap.classList.add("open");
 			if (state.nativeExternalCache?.key !== cacheKey) {
-				menu.innerHTML = `<div class="k-ext-heading">Mengambil stream URL...</div>`;
+				menu.innerHTML = `<div class="k-ext-heading">Resolving stream URL…</div>`;
 				const resolved = await resolveStream(channelSlug, videoSlug);
 				if (!resolved) {
-					menu.innerHTML = `<div class="k-ext-heading">Stream tidak ketemu</div>`;
+					menu.innerHTML = `<div class="k-ext-heading">Stream not found</div>`;
 					return;
 				}
 				state.nativeExternalCache = {
@@ -1490,7 +1594,7 @@
 		});
 		wrap.appendChild(button);
 		wrap.appendChild(menu);
-		switchButton.parentElement.insertBefore(wrap, switchButton);
+		anchorButton.parentElement.insertBefore(wrap, anchorButton);
 	}
 	var RETRYABLE_STATUS = new Set([
 		408,
@@ -2212,15 +2316,60 @@
 		}
 		bar.firstElementChild.style.width = `${fraction * 100}%`;
 	}
+	function findVodThumbnails(root) {
+		return [...root.querySelectorAll("a[href*=\"/videos/\"]")].filter((anchor) => {
+			const href = anchor.getAttribute("href");
+			return href && VOD_PATH_REGEX.test(href) && anchor.querySelector("img");
+		});
+	}
 	function injectThumbnailProgress(refresh = false) {
-		const anchors = document.querySelectorAll("a[href*=\"/videos/\"]");
-		for (const anchor of anchors) {
+		for (const anchor of findVodThumbnails(document)) {
 			const href = anchor.getAttribute("href");
 			if (!refresh && anchor.dataset["kProgressFor"] === href) continue;
-			if (!href || !VOD_PATH_REGEX.test(href)) continue;
-			if (!anchor.querySelector("img")) continue;
 			anchor.dataset[THUMB_PROGRESS_FLAG] = href;
 			renderBar(anchor, href);
+		}
+	}
+	function findCardThumbnail(trigger) {
+		for (let node = trigger.parentElement; node; node = node.parentElement) {
+			const thumbnails = findVodThumbnails(node);
+			if (!thumbnails.length) continue;
+			return new Set(thumbnails.map((a) => a.getAttribute("href"))).size === 1 ? thumbnails[0] : null;
+		}
+		return null;
+	}
+	var HISTORY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`;
+	function createMenuItem(menu, href) {
+		const item = document.createElement("button");
+		item.type = "button";
+		item.setAttribute("role", "menuitem");
+		item.tabIndex = -1;
+		item.className = `${menu.querySelector("[role=\"menuitem\"]")?.className || ""} ${PROGRESS_MENU_ITEM_CLASS}`;
+		item.innerHTML = `${HISTORY_ICON}<span>Remove watch progress</span>`;
+		item.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			const { channelSlug, videoSlug } = getVodSlugs(href);
+			clearWatchProgress(getProgressKey(channelSlug, videoSlug));
+			clearResumeTime(getResumeKey(channelSlug, videoSlug));
+			injectThumbnailProgress(true);
+			document.dispatchEvent(new KeyboardEvent("keydown", {
+				key: "Escape",
+				bubbles: true
+			}));
+		});
+		return item;
+	}
+	function injectProgressMenuItem() {
+		for (const menu of document.querySelectorAll(KICK_MENU_SELECTOR)) {
+			if (menu.dataset["kProgressMenu"]) continue;
+			menu.dataset[PROGRESS_MENU_FLAG] = "true";
+			const trigger = document.getElementById(menu.getAttribute("aria-labelledby"));
+			const thumbnail = trigger && findCardThumbnail(trigger);
+			if (!thumbnail) continue;
+			const href = thumbnail.getAttribute("href");
+			if (getWatchedFraction(thumbnail, href) === null) continue;
+			menu.appendChild(createMenuItem(menu, href));
 		}
 	}
 	function installThumbnailProgressRefresh() {
@@ -2239,7 +2388,8 @@
 		return getProgressKey(channelSlug, videoSlug);
 	}
 	function customPlayerOwnsProgress() {
-		return Boolean(state.activePlayerUi || state.isUnlocking || getPreferCustom());
+		if (state.activePlayerUi || state.isUnlocking) return true;
+		return isCustomPlayerEnabled() && state.customPlayerFailedKey !== getVodSlugs().cacheKey;
 	}
 	function trackNativeProgress() {
 		if (!isVodPage()) return;
@@ -2294,16 +2444,14 @@
 		window.location.assign(next.href);
 		return true;
 	}
-	var menuCommandId = null;
 	function registerSpaMenuCommand() {
-		if (typeof GM_registerMenuCommand !== "function") return;
-		if (menuCommandId !== null && typeof GM_unregisterMenuCommand === "function") GM_unregisterMenuCommand(menuCommandId);
-		const label = getSpaDisabled() ? "SPA navigation: off (click to turn on)" : "SPA navigation: on (click to turn off)";
-		menuCommandId = GM_registerMenuCommand(label, () => {
-			const disabled = !getSpaDisabled();
-			setSpaDisabled(disabled);
-			showToast(disabled ? "Kick Extended: SPA navigation off. Links now load a fresh page." : "Kick Extended: SPA navigation on.");
-			registerSpaMenuCommand();
+		addMenuCommand({
+			label: () => getSpaDisabled() ? "SPA navigation: off (click to turn on)" : "SPA navigation: on (click to turn off)",
+			run: () => {
+				const disabled = !getSpaDisabled();
+				setSpaDisabled(disabled);
+				showToast(disabled ? "Kick Extended: SPA navigation off. Links now load a fresh page." : "Kick Extended: SPA navigation on.");
+			}
 		});
 	}
 	console.log(`Kick Extended: userscript loaded (v${GM_info.script.version}), stream-to-disk ${canStreamToDisk() ? "available" : "unavailable"}`);
@@ -2347,6 +2495,7 @@
 		destroyCustomPlayer();
 		state.pendingStream = null;
 		state.prefetchedKey = null;
+		state.customPlayerFailedKey = null;
 	}
 	function runDownloadInjections() {
 		injectDownloadButton();
@@ -2374,6 +2523,7 @@
 	window.addEventListener("pagehide", destroyCustomPlayer);
 	installNativePlaybackGuard();
 	installSpaBlocker();
+	registerCustomPlayerMenuCommand();
 	registerSpaMenuCommand();
 	installThumbnailProgressRefresh();
 	new MutationObserver(() => {
@@ -2384,15 +2534,16 @@
 		if (subscriberOverlay) {
 			const outerContainer = subscriberOverlay.closest(SUBSCRIBER_OVERLAY_CONTAINER_SELECTOR);
 			if (outerContainer && !outerContainer.dataset.kickUnlockerProcessing && !state.isUnlocking) unlockVideo(subscriberOverlay);
-		} else ensureCustomPlayerToggle();
+		} else ensureCustomPlayer();
 		runDownloadInjections();
 		injectThumbnailProgress();
+		injectProgressMenuItem();
 		trackNativeProgress();
 	}).observe(document.body, {
 		childList: true,
 		subtree: true
 	});
-	ensureCustomPlayerToggle();
+	ensureCustomPlayer();
 	runDownloadInjections();
 	injectThumbnailProgress();
 	trackNativeProgress();

@@ -20,16 +20,17 @@ you use it is your responsibility.
 
 - **Sub-only VOD unlock.** Detects Kick's subscriber-only overlay, resolves the
   video's `master.m3u8` and mounts a working player in its place.
-- **Custom player.** Scrubbable progress bar with a hover time tooltip, quality
-  menu, volume slider, resume position and per-video playback settings.
+- **Custom player on every VOD.** Styled after Kick's own player, with a
+  scrubbable progress bar and hover time tooltip, quality and playback-speed
+  menus, a volume slider, resume position and per-video playback settings.
+  It replaces Kick's player as soon as that appears; turn it off from the
+  userscript manager's menu to keep Kick's player on normal VODs.
+  Subscriber-only VODs use it either way.
 - **Keyboard shortcuts.** See the table below.
 - **Auto-hiding controls,** with separate touch behaviour: a tap reveals the
   overlay, a double tap enters fullscreen.
 - **External player handoff.** Copy the stream URL, download an `.m3u`
   playlist, or launch VLC, PotPlayer, IINA or mpv.
-- **Player switching on normal VODs.** A button in Kick's own control bar swaps
-  to the custom player, and the choice is remembered: later visits switch as
-  soon as Kick's player appears.
 - **Optional full page loads.** Turn SPA navigation off from the userscript
   manager's menu and every link on Kick loads a fresh page instead of routing
   client-side.
@@ -38,7 +39,8 @@ you use it is your responsibility.
 - **Watch progress on thumbnails.** A YouTube-style bar under every VOD
   thumbnail shows how far you got, whether you watched it in the custom player
   or Kick's own. Kick keeps no watch history, so this is recorded locally in
-  the browser.
+  the browser. "Remove watch progress" in a card's ⋮ menu clears it for that
+  video.
 - **Built-in downloader.** The Download button on a VOD page, and the button
   on every video thumbnail, open a dialog that lists each available quality
   with its projected size and streams the VOD straight to disk with progress

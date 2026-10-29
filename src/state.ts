@@ -34,6 +34,11 @@ export const state = {
    *  per-mutation calls do not retry a failed resolve in a loop. */
   prefetchedKey: null as string | null,
 
+  /** VOD whose stream could not be resolved. Kick's player is left alone for
+   *  it: the auto-switch runs on every mutation and would otherwise retry,
+   *  and toast, on each one. */
+  customPlayerFailedKey: null as string | null,
+
   /**
    * In-flight VOD download, or null.
    *

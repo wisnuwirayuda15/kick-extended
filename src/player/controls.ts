@@ -1,7 +1,6 @@
 import { ICONS } from "../icons.ts";
-import { formatTime, getVolumeIcon } from "../lib/format.ts";
+import { formatClock, getVolumeIcon } from "../lib/format.ts";
 import {
-  clearPreferCustom,
   clearResumeTime,
   savePlayerSettings,
   saveResumeTime,
@@ -13,7 +12,11 @@ import {
   makeVideoTitle,
   populateExternalMenu,
 } from "./external.ts";
+import { buildMenuOption } from "./markup.ts";
 import { bindGlobalPlayerListeners } from "./shortcuts.ts";
+
+/** The speeds Kick's own player offers. */
+const PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
 /**
  * Queries the player's elements, defines its closures and wires all 42 of its
@@ -32,7 +35,7 @@ import { bindGlobalPlayerListeners } from "./shortcuts.ts";
  */
 export function createControls({
   videoParent,
-  manualSwitch,
+  replaceNative,
   resumeKey,
   progressKey,
   playerSettingsKey,
@@ -46,21 +49,11 @@ export function createControls({
   const controls = videoParent.querySelector("#k-controls");
   const btnPlay = videoParent.querySelector("#k-play");
   const btnFs = videoParent.querySelector("#k-fs");
-  const btnNative = videoParent.querySelector("#k-native-btn");
-  if (manualSwitch && btnNative) {
-    btnNative.style.display = "inline-flex";
-    btnNative.addEventListener("click", (event) => {
-      event.stopPropagation();
-      clearPreferCustom();
-      // Kick mounts its player during page bootstrap, so a reload is the
-      // only reliable way to get it back.
-      window.location.reload();
-    });
-  }
   const btnBig = videoParent.querySelector("#k-big-play");
   const btnSeekBack = videoParent.querySelector("#k-seek-back");
   const btnSeekFwd = videoParent.querySelector("#k-seek-fwd");
   const progressBar = videoParent.querySelector("#k-progress");
+  const bufferedBar = videoParent.querySelector("#k-buffered");
   const track = videoParent.querySelector("#k-track");
   const trackTooltip = videoParent.querySelector("#k-track-tooltip");
   const trackTooltipTime = videoParent.querySelector("#k-track-tooltip-time");
@@ -71,13 +64,16 @@ export function createControls({
   const extMenu = videoParent.querySelector("#k-ext-menu");
   const qualBtn = videoParent.querySelector("#k-quality-btn");
   const qualMenu = videoParent.querySelector("#k-quality-menu");
+  const speedWrap = videoParent.querySelector("#k-speed-wrap");
+  const speedBtn = videoParent.querySelector("#k-speed-btn");
+  const speedMenu = videoParent.querySelector("#k-speed-menu");
+  const menuWraps = [extWrap, speedWrap, qualWrap];
   const seekIndicator = videoParent.querySelector("#k-seek-indicator");
   const loadingOverlay = videoParent.querySelector("#k-loading");
 
   const volumeWrap = videoParent.querySelector("#k-volume-wrap");
   const volumeButton = videoParent.querySelector("#k-volume-btn");
   const volumeSlider = videoParent.querySelector("#k-volume");
-  const volumeValue = videoParent.querySelector("#k-volume-value");
   const initialVolume = Number.isFinite(savedPlayerSettings.volume)
     ? savedPlayerSettings.volume
     : 1;
@@ -89,12 +85,8 @@ export function createControls({
   const updateVolumeSliderVisual = (volume) => {
     const percent = Math.max(0, Math.min(100, Math.round(volume * 100)));
     volumeSlider.style.setProperty("--k-volume-percent", `${percent}%`);
-    volumeValue.textContent = `${percent}%`;
     volumeButton.innerHTML = getVolumeIcon(volume);
-    volumeButton.setAttribute(
-      "aria-label",
-      percent === 0 ? "Unmute volume" : "Mute volume",
-    );
+    volumeButton.setAttribute("aria-label", percent === 0 ? "Unmute" : "Mute");
     volumeWrap.dataset.muted = percent === 0 ? "true" : "false";
   };
 
@@ -162,20 +154,35 @@ export function createControls({
   let lastPointerType = "mouse";
   let touchMode = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
 
+  const closeMenus = () =>
+    menuWraps.forEach((wrap) => wrap.classList.remove("open"));
+  const isAnyMenuOpen = () =>
+    menuWraps.some((wrap) => wrap.classList.contains("open"));
+  const toggleMenu = (wrap) => {
+    const opening = !wrap.classList.contains("open");
+    closeMenus();
+    wrap.classList.toggle("open", opening);
+  };
+
+  // The centre buttons are for touch, where there is nothing to hover and a
+  // tap needs something to land on. Kick's desktop player has none, so with
+  // a mouse they stay hidden.
   const setCenterSeekVisible = (visible) => {
     [btnSeekBack, btnSeekFwd].forEach((button) =>
-      button.classList.toggle("visible", visible),
+      button.classList.toggle("visible", visible && touchMode),
     );
   };
 
   // On touch the centre button rides with the overlay so there is always
-  // something to tap to pause. With a mouse it keeps the old behaviour of
-  // only appearing while paused.
+  // something to tap to pause. With a mouse it only stands in for autoplay
+  // the browser blocked, until playback first starts.
   const syncBigButton = () => {
     btnBig.innerHTML = vid.paused ? ICONS.bigPlay : ICONS.bigPause;
     btnBig.classList.toggle(
       "visible",
-      touchMode ? controlsShown || vid.paused : vid.paused,
+      touchMode
+        ? controlsShown || vid.paused
+        : vid.paused && !hasStartedPlayback,
     );
   };
 
@@ -184,8 +191,7 @@ export function createControls({
     controls.style.opacity = "0";
     setCenterSeekVisible(false);
     trackTooltip.classList.remove("visible");
-    qualWrap.classList.remove("open");
-    extWrap.classList.remove("open");
+    closeMenus();
     controlsShown = false;
     syncBigButton();
     if (document.fullscreenElement) pRoot.style.cursor = "none";
@@ -199,8 +205,7 @@ export function createControls({
       // open menu.
       if (vid.paused) return;
       if (pointerOverControls) return;
-      if (qualWrap.classList.contains("open")) return;
-      if (extWrap.classList.contains("open")) return;
+      if (isAnyMenuOpen()) return;
 
       hideControlsNow();
     }, CONTROLS_HIDE_DELAY);
@@ -244,9 +249,11 @@ export function createControls({
   state.activePlayerUi = {
     vid,
     pRoot,
-    qualWrap,
-    extWrap,
+    menuWraps,
     btnFs,
+    // Kick's player was swapped out for this one, rather than a subscriber-
+    // only overlay; turning the custom player off has to bring it back.
+    replacedNative: replaceNative,
     showSeekIndicator,
     showControls,
     renderProgress: (time) => renderProgress(time),
@@ -271,15 +278,37 @@ export function createControls({
 
   extBtn.addEventListener("click", (event) => {
     event.stopPropagation();
-    qualWrap.classList.remove("open");
-    extWrap.classList.toggle("open");
+    toggleMenu(extWrap);
   });
 
   qualBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    extWrap.classList.remove("open");
-    qualWrap.classList.toggle("open");
+    toggleMenu(qualWrap);
   });
+
+  speedBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleMenu(speedWrap);
+  });
+
+  // The menu follows the rate rather than setting it blindly: the < and >
+  // shortcuts change it too, in steps the menu does not list.
+  const speedOptions = PLAYBACK_RATES.map((rate) => {
+    const option = buildMenuOption(`${rate}x`);
+    option.addEventListener("click", (event) => {
+      event.stopPropagation();
+      vid.playbackRate = rate;
+      closeMenus();
+    });
+    speedMenu.appendChild(option);
+    return { rate, option };
+  });
+  const syncSpeedMenu = () =>
+    speedOptions.forEach(({ rate, option }) =>
+      option.classList.toggle("active", rate === vid.playbackRate),
+    );
+  vid.addEventListener("ratechange", syncSpeedMenu);
+  syncSpeedMenu();
 
   volumeSlider.addEventListener("input", () => {
     applyVolume(parseFloat(volumeSlider.value));
@@ -332,10 +361,12 @@ export function createControls({
   btnBig.addEventListener("click", togglePlay);
   vid.addEventListener("play", () => {
     btnPlay.innerHTML = ICONS.pause;
+    btnPlay.setAttribute("aria-label", "Pause");
     syncBigButton();
   });
   vid.addEventListener("pause", () => {
     btnPlay.innerHTML = ICONS.play;
+    btnPlay.setAttribute("aria-label", "Play");
     syncBigButton();
     // The big play button takes over while paused; a spinner left up from a
     // seek would sit on top of it.
@@ -344,6 +375,7 @@ export function createControls({
   vid.addEventListener("playing", () => {
     hasStartedPlayback = true;
     setLoadingState(false);
+    syncBigButton();
   });
   vid.addEventListener("waiting", () => {
     if (!vid.paused) setLoadingState(true);
@@ -396,9 +428,27 @@ export function createControls({
   // not fire until the player has finished buffering the new spot.
   const renderProgress = (time) => {
     if (!isFinite(vid.duration)) return;
-    progressBar.style.width = (time / vid.duration) * 100 + "%";
-    timeDisplay.textContent = `${formatTime(time)} / ${formatTime(vid.duration)}`;
+    const percent = `${(time / vid.duration) * 100}%`;
+    progressBar.style.width = percent;
+    // The scrub handle hangs off the track, outside the bar that clips it.
+    track.style.setProperty("--k-progress", percent);
+    timeDisplay.textContent = `${formatClock(time)} / ${formatClock(vid.duration)}`;
   };
+
+  // How far ahead the player has loaded from the current position, drawn
+  // under the progress the way Kick's bar shows it.
+  const renderBuffered = () => {
+    if (!isFinite(vid.duration) || vid.duration <= 0) return;
+    let end = 0;
+    for (let i = 0; i < vid.buffered.length; i++) {
+      if (vid.buffered.start(i) <= vid.currentTime + 0.5) {
+        end = Math.max(end, vid.buffered.end(i));
+      }
+    }
+    bufferedBar.style.width = `${Math.min(end / vid.duration, 1) * 100}%`;
+  };
+  vid.addEventListener("progress", renderBuffered);
+  vid.addEventListener("timeupdate", renderBuffered);
 
   let isScrubbing = false;
   let scrubPointerId = null;
@@ -413,7 +463,7 @@ export function createControls({
     const ratio = ratioFromPointer(clientX);
     const rect = track.getBoundingClientRect();
     renderProgress(ratio * vid.duration);
-    trackTooltipTime.textContent = formatTime(ratio * vid.duration);
+    trackTooltipTime.textContent = formatClock(ratio * vid.duration);
     trackTooltip.style.left = `${ratio * rect.width}px`;
     trackTooltip.classList.add("visible");
     return ratio;
@@ -463,7 +513,7 @@ export function createControls({
     const rect = track.getBoundingClientRect();
     const ratio = ratioFromPointer(e.clientX);
 
-    trackTooltipTime.textContent = formatTime(ratio * vid.duration);
+    trackTooltipTime.textContent = formatClock(ratio * vid.duration);
     trackTooltip.style.left = `${ratio * rect.width}px`;
     trackTooltip.classList.add("visible");
   });
@@ -477,8 +527,7 @@ export function createControls({
   pRoot.addEventListener("mousemove", () => showControls());
   pRoot.addEventListener("mouseleave", () => {
     clearTimeout(controlsHideTimeout);
-    qualWrap.classList.remove("open");
-    extWrap.classList.remove("open");
+    closeMenus();
     trackTooltip.classList.remove("visible");
     pRoot.style.cursor = "";
     if (!vid.paused) controls.style.opacity = "0";
@@ -496,7 +545,13 @@ export function createControls({
   vid.addEventListener("play", () => scheduleControlsHide());
   vid.addEventListener("pause", () => showControls({ keepOpen: true }));
   document.addEventListener("fullscreenchange", () => {
-    if (pRoot.isConnected) showControls();
+    if (!pRoot.isConnected) return;
+    const isFullscreen = document.fullscreenElement === pRoot;
+    btnFs.innerHTML = isFullscreen ? ICONS.fullscreenExit : ICONS.fullscreen;
+    const label = isFullscreen ? "Exit fullscreen" : "Fullscreen";
+    btnFs.title = label;
+    btnFs.setAttribute("aria-label", label);
+    showControls();
   });
   btnFs.addEventListener("click", () => {
     if (!document.fullscreenElement) pRoot.requestFullscreen();

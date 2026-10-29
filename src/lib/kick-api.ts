@@ -158,7 +158,7 @@ export async function findStreamUrlFromMetadata(metadata) {
 
   if (!ivs) {
     console.error(
-      "Kick Unlocker: Could not parse session/segment from thumbnail",
+      "Kick Extended: Could not parse session/segment from thumbnail",
       thumbUrl,
     );
     return null;

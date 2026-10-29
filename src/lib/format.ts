@@ -14,6 +14,16 @@ export function formatTime(seconds) {
   }
 }
 
+/** Player clock as Kick's player prints it: 00:02, 01:00:54. */
+export function formatClock(seconds) {
+  const total = isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  const pad = (value) => String(value).padStart(2, "0");
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
 export function getVolumeIcon(volume) {
   if (volume <= 0) return ICONS.volumeMute;
   if (volume < 0.2) return ICONS.volumeLow;

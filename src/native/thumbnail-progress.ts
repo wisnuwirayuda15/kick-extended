@@ -1,10 +1,15 @@
 import {
+  KICK_MENU_SELECTOR,
+  PROGRESS_MENU_FLAG,
+  PROGRESS_MENU_ITEM_CLASS,
   STORAGE_PREFIX,
   THUMB_PROGRESS_CLASS,
   THUMB_PROGRESS_FLAG,
   VOD_PATH_REGEX,
 } from "../constants.ts";
 import {
+  clearResumeTime,
+  clearWatchProgress,
   getProgressKey,
   getResumeKey,
   readResumeTime,
@@ -73,20 +78,93 @@ function renderBar(anchor: HTMLElement, href: string) {
   (bar.firstElementChild as HTMLElement).style.width = `${fraction * 100}%`;
 }
 
+function findVodThumbnails(root: ParentNode) {
+  return [...root.querySelectorAll<HTMLElement>('a[href*="/videos/"]')].filter(
+    (anchor) => {
+      const href = anchor.getAttribute("href");
+      return href && VOD_PATH_REGEX.test(href) && anchor.querySelector("img");
+    },
+  );
+}
+
 /**
  * Draws the bar on thumbnails that do not have one yet. With `refresh`, every
  * thumbnail is redrawn, for when the stored positions may have moved on.
  */
 export function injectThumbnailProgress(refresh = false) {
-  const anchors = document.querySelectorAll<HTMLElement>('a[href*="/videos/"]');
-  for (const anchor of anchors) {
-    const href = anchor.getAttribute("href");
+  for (const anchor of findVodThumbnails(document)) {
+    const href = anchor.getAttribute("href")!;
     if (!refresh && anchor.dataset[THUMB_PROGRESS_FLAG] === href) continue;
-    if (!href || !VOD_PATH_REGEX.test(href)) continue;
-    if (!anchor.querySelector("img")) continue;
-
     anchor.dataset[THUMB_PROGRESS_FLAG] = href;
     renderBar(anchor, href);
+  }
+}
+
+/**
+ * The thumbnail of the card a menu trigger sits in. The first ancestor that
+ * holds any thumbnail is the card, unless it holds several VODs: then the
+ * trigger was not in a card at all, and that ancestor is a whole grid.
+ */
+function findCardThumbnail(trigger: Element) {
+  for (let node = trigger.parentElement; node; node = node.parentElement) {
+    const thumbnails = findVodThumbnails(node);
+    if (!thumbnails.length) continue;
+    const hrefs = new Set(thumbnails.map((a) => a.getAttribute("href")));
+    return hrefs.size === 1 ? thumbnails[0] : null;
+  }
+  return null;
+}
+
+const HISTORY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`;
+
+function createMenuItem(menu: Element, href: string) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.setAttribute("role", "menuitem");
+  item.tabIndex = -1;
+  // Borrowed from Kick's own item, so it looks and hovers like the rest.
+  const sibling = menu.querySelector('[role="menuitem"]');
+  item.className = `${sibling?.className || ""} ${PROGRESS_MENU_ITEM_CLASS}`;
+  item.innerHTML = `${HISTORY_ICON}<span>Remove watch progress</span>`;
+
+  item.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const { channelSlug, videoSlug } = getVodSlugs(href);
+    clearWatchProgress(getProgressKey(channelSlug, videoSlug));
+    // The bar falls back to the resume position, so that has to go too.
+    clearResumeTime(getResumeKey(channelSlug, videoSlug));
+    injectThumbnailProgress(true);
+    // Radix only closes on items it manages itself. Escape is what its
+    // dismiss handler listens for on the document.
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+  });
+  return item;
+}
+
+/** Adds "Remove watch progress" to an open card menu, if it has any. */
+export function injectProgressMenuItem() {
+  for (const menu of document.querySelectorAll<HTMLElement>(
+    KICK_MENU_SELECTOR,
+  )) {
+    // Once per menu, whatever the outcome. Radix mounts a fresh one on every
+    // open, and a menu that is not a card's would otherwise rescan the page
+    // on each mutation while it stays open.
+    if (menu.dataset[PROGRESS_MENU_FLAG]) continue;
+    menu.dataset[PROGRESS_MENU_FLAG] = "true";
+
+    const trigger = document.getElementById(
+      menu.getAttribute("aria-labelledby")!,
+    );
+    const thumbnail = trigger && findCardThumbnail(trigger);
+    if (!thumbnail) continue;
+
+    // Offered only where there is something to remove: the bar is showing.
+    const href = thumbnail.getAttribute("href")!;
+    if (getWatchedFraction(thumbnail, href) === null) continue;
+    menu.appendChild(createMenuItem(menu, href));
   }
 }
 

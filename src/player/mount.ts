@@ -6,7 +6,6 @@ import {
   resolveStream,
 } from "../lib/kick-api.ts";
 import {
-  clearPreferCustom,
   getPlayerSettingsKey,
   getProgressKey,
   getResumeKey,
@@ -26,7 +25,9 @@ import { setupPlayback } from "./quality.ts";
 import { getVodSlugs } from "../lib/vod-slugs.ts";
 
 export async function unlockVideo(triggerElement, options: any = {}) {
-  const { explicitContainer = null, manualSwitch = false } = options;
+  // replaceNative: the container holds Kick's working player rather than the
+  // subscriber-only overlay.
+  const { explicitContainer = null, replaceNative = false } = options;
   if (state.isUnlocking) return;
   const container =
     explicitContainer ||
@@ -34,7 +35,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
     null;
   if (!container || container.dataset.kickUnlockerProcessing) return;
 
-  const { channelSlug, videoSlug } = getVodSlugs();
+  const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
   const resumeKey = getResumeKey(channelSlug, videoSlug);
   const progressKey = getProgressKey(channelSlug, videoSlug);
   const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
@@ -47,12 +48,12 @@ export async function unlockVideo(triggerElement, options: any = {}) {
     // stream first. A failure after the container is wiped leaves the page
     // dead with no way back, so nothing is torn down until this succeeds.
     let prefetched = null;
-    if (manualSwitch) {
+    if (replaceNative) {
       prefetched = await resolveStream(channelSlug, videoSlug);
       if (!prefetched) {
-        clearPreferCustom();
+        state.customPlayerFailedKey = cacheKey;
         showToast(
-          "KickNoSub: stream tidak ketemu, tetap pakai player Kick. Auto-switch dimatikan.",
+          "Kick Extended: stream not found, staying on Kick's player for this VOD.",
         );
         return;
       }
@@ -142,7 +143,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
     const { vid, btnBig, qualBtn, qualMenu, qualWrap, setLoadingState } =
       createControls({
         videoParent,
-        manualSwitch,
+        replaceNative,
         resumeKey,
         progressKey,
         playerSettingsKey,

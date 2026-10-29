@@ -1,6 +1,14 @@
 import Hls from "hls.js";
 import { readResumeTime, savePlayerSettings } from "../lib/storage.ts";
 import { state } from "../state.ts";
+import { buildMenuOption } from "./markup.ts";
+
+// Kick labels its renditions 1080p60, 720p60, 480p: the frame rate is only
+// spelled out when it is above 30.
+function qualityLabel(level) {
+  const fps = Math.round(level.frameRate || 0);
+  return `${level.height}p${fps > 30 ? fps : ""}`;
+}
 
 /**
  * hls.js construction, the quality menu, saved-quality restore, resume seek
@@ -35,8 +43,9 @@ export function setupPlayback(
         qualitySettings = null,
       ) => {
         hls.currentLevel = level;
-        qualBtn.textContent = `${label} ▴`;
-        [...qualMenu.querySelectorAll(".k-quality-option")].forEach((option) =>
+        // A gear, like Kick's settings button: the quality is in the menu.
+        qualBtn.title = `Quality: ${label}`;
+        [...qualMenu.querySelectorAll(".k-menu-option")].forEach((option) =>
           option.classList.remove("active"),
         );
         if (optionRef) optionRef.classList.add("active");
@@ -53,10 +62,7 @@ export function setupPlayback(
         qualitySettings,
         isActive = false,
       ) => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "k-quality-option";
-        item.textContent = label;
+        const item = buildMenuOption(label);
         if (isActive) item.classList.add("active");
         item.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -76,8 +82,8 @@ export function setupPlayback(
           qualityItems.push({
             height: lvl.height,
             level: idx,
-            label: `${lvl.height}p`,
-            element: addQualityItem(idx, `${lvl.height}p`, {
+            label: qualityLabel(lvl),
+            element: addQualityItem(idx, qualityLabel(lvl), {
               mode: "manual",
               height: lvl.height,
             }),

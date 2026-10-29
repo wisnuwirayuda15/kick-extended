@@ -1,5 +1,5 @@
 import {
-  AUTO_CUSTOM_KEY,
+  CUSTOM_PLAYER_OFF_KEY,
   DISABLE_SPA_KEY,
   LEGACY_STORAGE_PREFIX,
   STORAGE_PREFIX,
@@ -109,17 +109,18 @@ export function saveWatchProgress(progressKey, time, duration) {
   localStorage.setItem(progressKey, JSON.stringify({ time, duration }));
 }
 
-/** Whether the user prefers the custom player on normal VOD pages. */
-export function getPreferCustom() {
-  return readMigrated(AUTO_CUSTOM_KEY) === "1";
+export function clearWatchProgress(progressKey) {
+  localStorage.removeItem(progressKey);
 }
 
-export function setPreferCustom() {
-  localStorage.setItem(AUTO_CUSTOM_KEY, "1");
+/** Whether normal VODs switch to the custom player. On unless turned off. */
+export function isCustomPlayerEnabled() {
+  return localStorage.getItem(CUSTOM_PLAYER_OFF_KEY) !== "1";
 }
 
-export function clearPreferCustom() {
-  removeBoth(AUTO_CUSTOM_KEY);
+export function setCustomPlayerEnabled(enabled: boolean) {
+  if (enabled) localStorage.removeItem(CUSTOM_PLAYER_OFF_KEY);
+  else localStorage.setItem(CUSTOM_PLAYER_OFF_KEY, "1");
 }
 
 /** Whether the user has turned Kick's client-side navigation off. */

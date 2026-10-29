@@ -6,7 +6,10 @@ import {
 import { state } from "./state.ts";
 import { ensureCopyUrlButton } from "./native/copy-url-button.ts";
 import { unlockVideo } from "./player/mount.ts";
-import { ensureCustomPlayerToggle } from "./native/switch-button.ts";
+import {
+  ensureCustomPlayer,
+  registerCustomPlayerMenuCommand,
+} from "./native/custom-player-switch.ts";
 import {
   installNativePlaybackGuard,
   releaseNativePlayback,
@@ -15,6 +18,7 @@ import { injectDownloadButton } from "./download/download-button.ts";
 import { canStreamToDisk } from "./download/fs-access.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
 import {
+  injectProgressMenuItem,
   injectThumbnailProgress,
   installThumbnailProgressRefresh,
 } from "./native/thumbnail-progress.ts";
@@ -99,6 +103,7 @@ function handleLocationChange() {
   // away a stream that is already resolved for the same VOD.
   state.pendingStream = null;
   state.prefetchedKey = null;
+  state.customPlayerFailedKey = null;
 }
 
 function runDownloadInjections() {
@@ -141,6 +146,7 @@ window.addEventListener("hashchange", handleLocationChange);
 window.addEventListener("pagehide", destroyCustomPlayer);
 installNativePlaybackGuard();
 installSpaBlocker();
+registerCustomPlayerMenuCommand();
 registerSpaMenuCommand();
 installThumbnailProgressRefresh();
 
@@ -172,15 +178,16 @@ const observer = new MutationObserver(() => {
     // return before the merge; it is an else branch now so that the download
     // injectors below still run in that case, as they did when the downloader
     // had an observer of its own.
-    ensureCustomPlayerToggle();
+    ensureCustomPlayer();
   }
 
   runDownloadInjections();
   injectThumbnailProgress();
+  injectProgressMenuItem();
   trackNativeProgress();
 });
 observer.observe(document.body, { childList: true, subtree: true });
-ensureCustomPlayerToggle();
+ensureCustomPlayer();
 runDownloadInjections();
 injectThumbnailProgress();
 trackNativeProgress();

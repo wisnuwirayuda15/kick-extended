@@ -8,8 +8,13 @@
 /** Overlay Kick renders in place of the player on subscriber-only VODs. */
 export const SUBSCRIBER_ONLY_SELECTOR = '[data-testid="video-subscriber-only"]';
 
-/** Anchor for injecting buttons into Kick's native control bar. */
-export const CONTROL_ANCHOR_SELECTOR = '[data-testid="video-player-clip"]';
+/**
+ * Anchor for injecting buttons into Kick's native control bar. Kick dropped
+ * the data-testid its buttons used to carry; the design-system icon name is
+ * what still tells them apart.
+ */
+export const CONTROL_ANCHOR_SELECTOR =
+  'button:has(> svg[data-ds-icon="FullscreenExpand"])';
 
 /** Verified badge next to the channel name; anchor for the copy-URL button. */
 export const BADGE_SELECTOR = 'svg[data-ds-icon="VerifiedBadge"]';
@@ -44,8 +49,11 @@ export const KICK_CHAT_SELECTOR = "#chatroom-messages";
 export const STORAGE_PREFIX = "kick_extended_";
 export const LEGACY_STORAGE_PREFIX = "kick_unlocker_";
 
-/** Remembers that the user prefers the custom player on normal VOD pages. */
-export const AUTO_CUSTOM_KEY = `${STORAGE_PREFIX}prefer_custom`;
+/**
+ * Set when the user turns the custom player off for normal VODs. The custom
+ * player is the default, so only opting out is stored.
+ */
+export const CUSTOM_PLAYER_OFF_KEY = `${STORAGE_PREFIX}custom_player_off`;
 
 /** Set when the user turns SPA navigation off; see native/spa-navigation.ts. */
 export const DISABLE_SPA_KEY = `${STORAGE_PREFIX}disable_spa`;
@@ -78,6 +86,18 @@ export const THUMB_PROGRESS_CLASS = "k-thumb-progress";
  * boolean, because React can reuse a card's anchor for a different VOD.
  */
 export const THUMB_PROGRESS_FLAG = "kProgressFor";
+
+/**
+ * An open dropdown menu, such as the ⋮ menu on a video card. Radix portals it
+ * to the end of <body>; aria-labelledby is the only link back to its trigger.
+ */
+export const KICK_MENU_SELECTOR = '[role="menu"][aria-labelledby]';
+
+/** "Remove watch progress" item added to a video card's ⋮ menu. */
+export const PROGRESS_MENU_ITEM_CLASS = "k-progress-menu-item";
+
+/** Marks a menu as already checked for that item. */
+export const PROGRESS_MENU_FLAG = "kProgressMenu";
 
 /**
  * Downloader tuning.

@@ -1,3 +1,4 @@
+import { addMenuCommand } from "../lib/menu.ts";
 import { getSpaDisabled, setSpaDisabled } from "../lib/storage.ts";
 import { showToast } from "../lib/toast.ts";
 
@@ -68,27 +69,20 @@ export function interceptPushState(url: unknown) {
   return true;
 }
 
-// Greasemonkey 4 has no synchronous menu API, so there is simply no toggle
-// there rather than a crash.
-let menuCommandId: any = null;
-
 export function registerSpaMenuCommand() {
-  if (typeof GM_registerMenuCommand !== "function") return;
-  if (menuCommandId !== null && typeof GM_unregisterMenuCommand === "function")
-    GM_unregisterMenuCommand(menuCommandId);
-
-  const label = getSpaDisabled()
-    ? "SPA navigation: off (click to turn on)"
-    : "SPA navigation: on (click to turn off)";
-
-  menuCommandId = GM_registerMenuCommand(label, () => {
-    const disabled = !getSpaDisabled();
-    setSpaDisabled(disabled);
-    showToast(
-      disabled
-        ? "Kick Extended: SPA navigation off. Links now load a fresh page."
-        : "Kick Extended: SPA navigation on.",
-    );
-    registerSpaMenuCommand();
+  addMenuCommand({
+    label: () =>
+      getSpaDisabled()
+        ? "SPA navigation: off (click to turn on)"
+        : "SPA navigation: on (click to turn off)",
+    run: () => {
+      const disabled = !getSpaDisabled();
+      setSpaDisabled(disabled);
+      showToast(
+        disabled
+          ? "Kick Extended: SPA navigation off. Links now load a fresh page."
+          : "Kick Extended: SPA navigation on.",
+      );
+    },
   });
 }

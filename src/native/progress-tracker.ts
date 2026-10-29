@@ -1,7 +1,7 @@
 import { NATIVE_VIDEO_SELECTOR } from "../constants.ts";
 import {
-  getPreferCustom,
   getProgressKey,
+  isCustomPlayerEnabled,
   saveWatchProgress,
 } from "../lib/storage.ts";
 import { getVodSlugs } from "../lib/vod-slugs.ts";
@@ -26,8 +26,11 @@ function currentProgressKey() {
 // is not the user's: it starts every VOD from zero, and writing that would
 // wipe out the position the custom player is about to resume from.
 function customPlayerOwnsProgress() {
-  return Boolean(
-    state.activePlayerUi || state.isUnlocking || getPreferCustom(),
+  if (state.activePlayerUi || state.isUnlocking) return true;
+  // About to take over, unless it already failed for this VOD.
+  return (
+    isCustomPlayerEnabled() &&
+    state.customPlayerFailedKey !== getVodSlugs().cacheKey
   );
 }
 

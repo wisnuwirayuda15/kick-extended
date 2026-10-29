@@ -3,7 +3,11 @@ import {
   SUBSCRIBER_ONLY_SELECTOR,
 } from "../constants.ts";
 import { resolveStream } from "../lib/kick-api.ts";
-import { getPreferCustom, setPreferCustom } from "../lib/storage.ts";
+import { addMenuCommand } from "../lib/menu.ts";
+import {
+  isCustomPlayerEnabled,
+  setCustomPlayerEnabled,
+} from "../lib/storage.ts";
 import { showToast } from "../lib/toast.ts";
 import {
   buildExternalTargets,
@@ -19,66 +23,72 @@ import {
 } from "./detect.ts";
 import { getVodSlugs } from "../lib/vod-slugs.ts";
 
-export function ensureCustomPlayerToggle() {
+// Every VOD plays in the custom player unless the user turns it off from the
+// userscript manager's menu. Subscriber-only VODs are unlocked either way,
+// from main.ts: Kick's player cannot play those at all.
+
+export function ensureCustomPlayer() {
   if (!isVodPage() || state.isUnlocking) return;
-  // Sub-only pages are handled automatically by the observer below.
+  // Sub-only pages are handled automatically by the observer in main.ts.
   if (document.querySelector(SUBSCRIBER_ONLY_SELECTOR)) return;
 
-  const preferCustom = getPreferCustom();
-  if (preferCustom) {
-    // Start resolving before Kick's player has even rendered, so the switch
-    // below is not held up by the network once it is visible. Once per VOD:
-    // this runs on every mutation, and a failed resolve must not be retried
-    // on each of them.
-    const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
-    if (state.prefetchedKey !== cacheKey) {
-      state.prefetchedKey = cacheKey;
-      resolveStream(channelSlug, videoSlug);
-    }
+  if (!isCustomPlayerEnabled()) {
+    ensureNativeExternalButton();
+    return;
+  }
+
+  const { channelSlug, videoSlug, cacheKey } = getVodSlugs();
+  if (state.customPlayerFailedKey === cacheKey) {
+    ensureNativeExternalButton();
+    return;
+  }
+
+  // Start resolving before Kick's player has even rendered, so the switch
+  // below is not held up by the network once it is visible. Once per VOD:
+  // this runs on every mutation, and a failed resolve must not be retried
+  // on each of them.
+  if (state.prefetchedKey !== cacheKey) {
+    state.prefetchedKey = cacheKey;
+    resolveStream(channelSlug, videoSlug);
   }
 
   const container: any = findNativePlayerContainer();
   if (!container || container.dataset.kickUnlockerProcessing) return;
+  if (!isNativePlayerVisible()) return;
 
-  const switchToCustom = () =>
-    unlockVideo(null, { explicitContainer: container, manualSwitch: true });
-
-  if (preferCustom) {
-    if (!isNativePlayerVisible()) return;
-    showToast(
-      "KickNoSub: otomatis pindah ke custom player. Pakai tombol swap di control bar buat balik ke player Kick.",
-      6000,
-    );
-    switchToCustom();
-    return;
-  }
-
-  const anchorButton = document.querySelector(CONTROL_ANCHOR_SELECTOR);
-  if (!anchorButton || !anchorButton.parentElement) return;
-  if (anchorButton.parentElement.querySelector("#k-switch-btn")) return;
-
-  const switchButton = document.createElement("button");
-  switchButton.id = "k-switch-btn";
-  switchButton.type = "button";
-  switchButton.dataset.kickNosub = "true";
-  switchButton.title = "Ganti ke player KickNoSub";
-  switchButton.setAttribute("aria-label", "Ganti ke player KickNoSub");
-  // Borrow the sibling's classes so it inherits Kick's sizing, hover and
-  // focus treatment instead of being styled from scratch.
-  switchButton.className = anchorButton.className;
-  switchButton.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>`;
-  switchButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setPreferCustom();
-    switchToCustom();
-  });
-
-  anchorButton.parentElement.insertBefore(switchButton, anchorButton);
-  injectNativeExternalButton(anchorButton, switchButton);
+  unlockVideo(null, { explicitContainer: container, replaceNative: true });
 }
 
-export function injectNativeExternalButton(anchorButton, switchButton) {
+export function registerCustomPlayerMenuCommand() {
+  addMenuCommand({
+    label: () =>
+      isCustomPlayerEnabled()
+        ? "Custom player: on (click to turn off)"
+        : "Custom player: off (click to turn on)",
+    run: () => {
+      const enabled = !isCustomPlayerEnabled();
+      setCustomPlayerEnabled(enabled);
+
+      if (enabled) {
+        showToast("Kick Extended: custom player on.");
+        ensureCustomPlayer();
+        return;
+      }
+
+      showToast(
+        "Kick Extended: custom player off. Subscriber-only VODs still use it.",
+      );
+      // Kick mounts its player during page bootstrap, so a reload is the only
+      // reliable way to get it back. A sub-only VOD keeps the custom player.
+      if (state.activePlayerUi?.replacedNative) window.location.reload();
+    },
+  });
+}
+
+/** External-player menu in Kick's own control bar, for when it is in use. */
+function ensureNativeExternalButton() {
+  const anchorButton = document.querySelector(CONTROL_ANCHOR_SELECTOR);
+  if (!anchorButton || !anchorButton.parentElement) return;
   if (anchorButton.parentElement.querySelector("#k-native-ext-wrap")) return;
 
   const wrap = document.createElement("div");
@@ -87,8 +97,10 @@ export function injectNativeExternalButton(anchorButton, switchButton) {
 
   const button = document.createElement("button");
   button.type = "button";
-  button.title = "Buka di player eksternal";
-  button.setAttribute("aria-label", "Buka di player eksternal");
+  button.title = "Open in external player";
+  button.setAttribute("aria-label", "Open in external player");
+  // Borrow the sibling's classes so it inherits Kick's sizing, hover and
+  // focus treatment instead of being styled from scratch.
   button.className = anchorButton.className;
   button.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
 
@@ -111,10 +123,10 @@ export function injectNativeExternalButton(anchorButton, switchButton) {
     wrap.classList.add("open");
 
     if (state.nativeExternalCache?.key !== cacheKey) {
-      menu.innerHTML = `<div class="k-ext-heading">Mengambil stream URL...</div>`;
+      menu.innerHTML = `<div class="k-ext-heading">Resolving stream URL…</div>`;
       const resolved = await resolveStream(channelSlug, videoSlug);
       if (!resolved) {
-        menu.innerHTML = `<div class="k-ext-heading">Stream tidak ketemu</div>`;
+        menu.innerHTML = `<div class="k-ext-heading">Stream not found</div>`;
         return;
       }
       state.nativeExternalCache = { key: cacheKey, ...resolved };
@@ -136,5 +148,5 @@ export function injectNativeExternalButton(anchorButton, switchButton) {
 
   wrap.appendChild(button);
   wrap.appendChild(menu);
-  switchButton.parentElement.insertBefore(wrap, switchButton);
+  anchorButton.parentElement.insertBefore(wrap, anchorButton);
 }

@@ -34,58 +34,75 @@ export function buildChatShellMarkup() {
 }
 
 /**
- * The custom player. Every id and class here is load-bearing: the CSS in
- * styles.css and the query block in controls.ts both depend on them, so
- * the k- prefix and these exact names must not change.
+ * The custom player, laid out like Kick's own: a full-width seek bar over a
+ * single row of 44px buttons. Every id and class here is load-bearing: the
+ * CSS in styles.css and the query block in controls.ts both depend on them,
+ * so the k- prefix and these exact names must not change.
  */
 export function buildPlayerMarkup() {
   return `
-            <div id="k-player" style="width:100%;height:100%;position:relative;background:black;overflow:hidden;font-family:Inter,sans-serif;">
-                <video id="k-video" playsinline style="width:100%;height:100%;object-fit:contain;"></video>
+            <div id="k-player">
+                <video id="k-video" playsinline></video>
                 <div id="k-loading" class="visible" aria-hidden="true">
                     <div class="k-loading-spinner"></div>
                 </div>
-                <div id="k-controls" style="position:absolute;bottom:0;left:0;width:100%;padding:20px 15px 10px 15px;background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);display:flex;flex-direction:column;opacity:0;transition:opacity 0.2s;">
-                    <div id="k-track" style="width:100%;height:5px;padding:8px 0;background:rgba(255,255,255,0.3);background-clip:content-box;box-sizing:content-box;cursor:pointer;position:relative;margin-bottom:4px;border-radius:2px;">
+                <div id="k-controls">
+                    <div id="k-track">
                         <div id="k-track-tooltip">
-                            <div id="k-track-tooltip-time">0:00</div>
+                            <div id="k-track-tooltip-time">00:00</div>
                         </div>
-                         <div id="k-progress" style="width:0%;height:100%;background:#53fc18;position:relative;border-radius:2px;"></div>
+                        <div id="k-track-bar">
+                            <div id="k-buffered"></div>
+                            <div id="k-progress"></div>
+                        </div>
                     </div>
                     <div id="k-controls-row">
                         <div id="k-controls-left">
-                            <button id="k-play" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.play}</button>
-                            <span id="k-time" style="font-size:13px;color:#ddd;font-variant-numeric:tabular-nums;">0:00 / 0:00</span>
+                            <button id="k-play" class="k-btn" type="button" aria-label="Play">${ICONS.play}</button>
                             <div id="k-volume-wrap">
-                                <button id="k-volume-btn" type="button" aria-label="Mute volume">${ICONS.volumeHigh}</button>
-                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1">
-                                <span id="k-volume-value">100%</span>
+                                <button id="k-volume-btn" class="k-btn" type="button" aria-label="Mute">${ICONS.volumeHigh}</button>
+                                <input id="k-volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
                             </div>
+                            <span id="k-time">00:00 / 00:00</span>
                         </div>
                         <div id="k-controls-right">
-                            <button id="k-native-btn" type="button" title="Kembali ke player Kick">${ICONS.swap}</button>
-                            <div id="k-ext-wrap" class="k-ext-wrap">
-                                <button id="k-ext-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
-                                <div id="k-ext-menu" class="k-ext-menu"></div>
+                            <div id="k-ext-wrap" class="k-ext-wrap k-menu-wrap">
+                                <button id="k-ext-btn" class="k-btn" type="button" title="Open in external player" aria-label="Open in external player">${ICONS.external}</button>
+                                <div id="k-ext-menu" class="k-ext-menu k-menu"></div>
                             </div>
-                            <div id="k-quality-wrap">
-                                <button id="k-quality-btn" type="button">Auto ▴</button>
-                                <div id="k-quality-menu"></div>
+                            <button id="k-fs" class="k-btn" type="button" title="Fullscreen" aria-label="Fullscreen">${ICONS.fullscreen}</button>
+                            <div id="k-speed-wrap" class="k-menu-wrap">
+                                <button id="k-speed-btn" class="k-btn" type="button" title="Playback speed" aria-label="Playback speed">${ICONS.speed}</button>
+                                <div id="k-speed-menu" class="k-menu"></div>
                             </div>
-                            <button id="k-fs" style="background:none;border:none;cursor:pointer;opacity:0.9;">${ICONS.maximize}</button>
+                            <div id="k-quality-wrap" class="k-menu-wrap">
+                                <button id="k-quality-btn" class="k-btn" type="button" title="Quality" aria-label="Quality">${ICONS.settings}</button>
+                                <div id="k-quality-menu" class="k-menu"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div id="k-seek-indicator" aria-hidden="true"></div>
-                <button id="k-seek-back" class="k-center-seek" type="button" title="Mundur 10 detik" aria-label="Mundur 10 detik">
+                <button id="k-seek-back" class="k-center-seek" type="button" title="Rewind 10 seconds" aria-label="Rewind 10 seconds">
                     ${ICONS.backward}<span class="k-center-seek-label">10</span>
                 </button>
-                <button id="k-big-play" style="position:absolute;top:50%;left:50%;width:70px;height:70px;background:rgba(7,7,7,0.72);border-radius:50%;border:1px solid rgba(255,255,255,0.18);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <button id="k-big-play" type="button" aria-label="Play">
                     ${ICONS.bigPlay}
                 </button>
-                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Maju 10 detik" aria-label="Maju 10 detik">
+                <button id="k-seek-fwd" class="k-center-seek" type="button" title="Forward 10 seconds" aria-label="Forward 10 seconds">
                     ${ICONS.forward}<span class="k-center-seek-label">10</span>
                 </button>
             </div>
         `;
+}
+
+/** One row of a player menu, with the check Kick shows on the active one. */
+export function buildMenuOption(label: string) {
+  const option = document.createElement("button");
+  option.type = "button";
+  option.className = "k-menu-option";
+  option.setAttribute("role", "menuitemradio");
+  option.innerHTML = `<span></span>${ICONS.check}`;
+  option.querySelector("span")!.textContent = label;
+  return option;
 }
