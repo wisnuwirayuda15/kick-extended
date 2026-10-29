@@ -15,6 +15,11 @@ import { injectDownloadButton } from "./download/download-button.ts";
 import { canStreamToDisk } from "./download/fs-access.ts";
 import { injectThumbnailButtons } from "./download/thumbnail-buttons.ts";
 import {
+  injectThumbnailProgress,
+  installThumbnailProgressRefresh,
+} from "./native/thumbnail-progress.ts";
+import { trackNativeProgress } from "./native/progress-tracker.ts";
+import {
   installSpaBlocker,
   interceptPushState,
   registerSpaMenuCommand,
@@ -112,6 +117,9 @@ function runDownloadInjections() {
 const navigationCallbacks = [
   handleLocationChange,
   () => setTimeout(runDownloadInjections, 100),
+  // Cards React keeps across the route change still show the bar as it was
+  // before the VOD that was just left.
+  () => setTimeout(() => injectThumbnailProgress(true), 100),
 ];
 
 function onNavigate() {
@@ -134,6 +142,7 @@ window.addEventListener("pagehide", destroyCustomPlayer);
 installNativePlaybackGuard();
 installSpaBlocker();
 registerSpaMenuCommand();
+installThumbnailProgressRefresh();
 
 const observer = new MutationObserver(() => {
   handleLocationChange();
@@ -167,7 +176,11 @@ const observer = new MutationObserver(() => {
   }
 
   runDownloadInjections();
+  injectThumbnailProgress();
+  trackNativeProgress();
 });
 observer.observe(document.body, { childList: true, subtree: true });
 ensureCustomPlayerToggle();
 runDownloadInjections();
+injectThumbnailProgress();
+trackNativeProgress();

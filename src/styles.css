@@ -238,6 +238,23 @@ a:hover > .k-thumb-dl-btn,
   background: rgba(0, 0, 0, 0.9);
 }
 
+/* Watch progress along the bottom of a VOD thumbnail. The card clips it to
+   its own rounded corners. */
+.k-thumb-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+.k-thumb-progress > div {
+  height: 100%;
+  background: #53fc18;
+}
+
 /* Download dialog and progress panel.
    Body-level and fixed, sitting at the same z-index as #k-toast: both must
    escape #k-player, which is removed on SPA navigation and is the only

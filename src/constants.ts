@@ -70,6 +70,15 @@ export const THUMB_DOWNLOAD_BUTTON_CLASS = "k-thumb-dl-btn";
 /** Marks a thumbnail anchor as already carrying a download button. */
 export const THUMB_INJECTED_FLAG = "kDlInjected";
 
+/** Watch-progress bar drawn along the bottom of a thumbnail. */
+export const THUMB_PROGRESS_CLASS = "k-thumb-progress";
+
+/**
+ * The href a thumbnail's progress bar was drawn for. An href rather than a
+ * boolean, because React can reuse a card's anchor for a different VOD.
+ */
+export const THUMB_PROGRESS_FLAG = "kProgressFor";
+
 /**
  * Downloader tuning.
  *

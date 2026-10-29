@@ -8,6 +8,7 @@ import {
 import {
   clearPreferCustom,
   getPlayerSettingsKey,
+  getProgressKey,
   getResumeKey,
   loadPlayerSettings,
 } from "../lib/storage.ts";
@@ -35,6 +36,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
 
   const { channelSlug, videoSlug } = getVodSlugs();
   const resumeKey = getResumeKey(channelSlug, videoSlug);
+  const progressKey = getProgressKey(channelSlug, videoSlug);
   const playerSettingsKey = getPlayerSettingsKey(channelSlug, videoSlug);
   const savedPlayerSettings = loadPlayerSettings(playerSettingsKey);
 
@@ -142,6 +144,7 @@ export async function unlockVideo(triggerElement, options: any = {}) {
         videoParent,
         manualSwitch,
         resumeKey,
+        progressKey,
         playerSettingsKey,
         savedPlayerSettings,
         streamUrl,

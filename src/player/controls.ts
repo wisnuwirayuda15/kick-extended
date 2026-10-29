@@ -5,6 +5,7 @@ import {
   clearResumeTime,
   savePlayerSettings,
   saveResumeTime,
+  saveWatchProgress,
 } from "../lib/storage.ts";
 import { state } from "../state.ts";
 import {
@@ -33,6 +34,7 @@ export function createControls({
   videoParent,
   manualSwitch,
   resumeKey,
+  progressKey,
   playerSettingsKey,
   savedPlayerSettings,
   streamUrl,
@@ -376,6 +378,7 @@ export function createControls({
 
     if (Date.now() - lastSave > 4000) {
       saveResumeTime(resumeKey, vid.currentTime);
+      saveWatchProgress(progressKey, vid.currentTime, vid.duration);
       lastSave = Date.now();
     }
 
@@ -385,6 +388,8 @@ export function createControls({
   });
   vid.addEventListener("ended", () => {
     clearResumeTime(resumeKey);
+    // Resume restarts from zero, but the thumbnail shows it as watched.
+    saveWatchProgress(progressKey, vid.duration, vid.duration);
   });
   // Rendering the bar is split out so a seek can paint the new position
   // immediately instead of waiting for the next `timeupdate`, which does

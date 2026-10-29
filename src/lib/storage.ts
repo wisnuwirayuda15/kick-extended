@@ -80,6 +80,35 @@ export function clearResumeTime(resumeKey) {
   removeBoth(resumeKey);
 }
 
+// Watch progress is kept apart from the resume position on purpose. Resume is
+// cleared when a VOD ends so a rewatch starts from zero, but the thumbnail bar
+// should then show the VOD as fully watched. It also carries the duration, so
+// a thumbnail can draw the bar without knowing anything about the video.
+
+export function getProgressKey(channelSlug, videoSlug) {
+  return `${STORAGE_PREFIX}progress:${channelSlug}:${videoSlug}`;
+}
+
+/** Last watched position as { time, duration } in seconds, or null. */
+export function readWatchProgress(progressKey) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(progressKey) || "null");
+    const time = Number(parsed?.time);
+    const duration = Number(parsed?.duration);
+    if (!Number.isFinite(time) || !Number.isFinite(duration)) return null;
+    if (duration <= 0) return null;
+    return { time, duration };
+  } catch (e) {
+    return null;
+  }
+}
+
+export function saveWatchProgress(progressKey, time, duration) {
+  if (!Number.isFinite(time) || !Number.isFinite(duration)) return;
+  if (duration <= 0) return;
+  localStorage.setItem(progressKey, JSON.stringify({ time, duration }));
+}
+
 /** Whether the user prefers the custom player on normal VOD pages. */
 export function getPreferCustom() {
   return readMigrated(AUTO_CUSTOM_KEY) === "1";

@@ -35,6 +35,10 @@ you use it is your responsibility.
   client-side.
 - **Copy stream URL** button in the channel header.
 - **Chat replay** synced to the video position.
+- **Watch progress on thumbnails.** A YouTube-style bar under every VOD
+  thumbnail shows how far you got, whether you watched it in the custom player
+  or Kick's own. Kick keeps no watch history, so this is recorded locally in
+  the browser.
 - **Built-in downloader.** The Download button on a VOD page, and the button
   on every video thumbnail, open a dialog that lists each available quality
   with its projected size and streams the VOD straight to disk with progress
