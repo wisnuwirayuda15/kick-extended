@@ -40,6 +40,17 @@ export function findCopyButtonAnchor() {
   return document.querySelector(CHANNEL_NAME_SELECTOR);
 }
 
+// Page layout rather than player, however closely it hugs the video. Size
+// alone cannot tell: on a large window Kick's scrolling <main> is barely
+// taller than the player inside it, and wiping it takes the channel info and
+// everything below it down with the player.
+function isPageLayout(node: Element) {
+  if (node.tagName === "MAIN") return true;
+  if (node.querySelector(CHANNEL_NAME_SELECTOR)) return true;
+  const { overflowY } = getComputedStyle(node);
+  return overflowY === "auto" || overflowY === "scroll";
+}
+
 export function findNativePlayerContainer() {
   const nativeVideo = getNativeVideo();
   if (!nativeVideo) return null;
@@ -51,12 +62,13 @@ export function findNativePlayerContainer() {
   // Fallback: climb while each ancestor still hugs the video box. The
   // control overlay is absolutely positioned inside that same box, so the
   // last tight-fitting ancestor is the player root. The first one that
-  // grows noticeably is page chrome and must not be wiped.
+  // grows noticeably, or is page layout, must not be wiped.
   const videoRect = nativeVideo.getBoundingClientRect();
   let node = nativeVideo.parentElement;
   let bestMatch = nativeVideo.parentElement;
 
   while (node && node !== document.body) {
+    if (isPageLayout(node)) break;
     const rect = node.getBoundingClientRect();
     if (
       rect.width > videoRect.width * 1.15 ||
